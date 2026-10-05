@@ -1,4 +1,4 @@
-package userrepository
+package mysql
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"smsgateway/entity"
 	"smsgateway/pkg/errmsg"
 	"smsgateway/pkg/richerror"
-	"smsgateway/repository/mysql"
 )
 
 func (m *MysqlUserRepository) IncreaseBalance(ctx context.Context, userID uint, amount float64) (float64, error) {
@@ -18,9 +17,9 @@ func (m *MysqlUserRepository) IncreaseBalance(ctx context.Context, userID uint, 
 
 	tx, err := m.adapter.Client().BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
-		err = mysql.WrapMySQLError("begin increase balance transaction", err)
+		err = errmsg.WrapMySQLError("begin increase balance transaction", err)
 		return 0, richerror.New(op).WithErr(err).WithKind(richerror.KindUnexpected).
-				WithMessage(errmsg.ErrorMsgSomethingWentWrong)
+			WithMessage(errmsg.ErrorMsgSomethingWentWrong)
 	}
 
 	committed := false
@@ -39,13 +38,13 @@ func (m *MysqlUserRepository) IncreaseBalance(ctx context.Context, userID uint, 
 				WithMessage(errmsg.ErrorMsgNotFound)
 		}
 
-		err = mysql.WrapMySQLError(fmt.Sprintf("get user %s for update", userID), err)
+		err = errmsg.WrapMySQLError(fmt.Sprintf("get user %s for update", userID), err)
 		return 0, richerror.New(op).WithErr(err).WithKind(richerror.KindUnexpected).
 			WithMessage(err.Error())
 	}
 
 	if _, err := tx.Exec("UPDATE users SET balance = balance + ? WHERE id = ?", amount, userID); err != nil {
-		err = mysql.WrapMySQLError(fmt.Sprintf("increase user %s balance", userID), err)
+		err = errmsg.WrapMySQLError(fmt.Sprintf("increase user %s balance", userID), err)
 		return newBalance, richerror.New(op).WithKind(richerror.KindUnexpected).
 			WithErr(err).WithMessage(err.Error())
 	}
@@ -56,11 +55,11 @@ func (m *MysqlUserRepository) IncreaseBalance(ctx context.Context, userID uint, 
 	}
 
 	if err := tx.Commit(); err != nil {
-		return 0, mysql.WrapMySQLError("commit empty increase balance transaction", err)
+		return 0, errmsg.WrapMySQLError("commit empty increase balance transaction", err)
 	} else {
 		committed = true
 	}
-	
+
 	if err := m.adapter.Client().QueryRow("SELECT balance FROM users WHERE id = ?", userID).Scan(&newBalance); err != nil {
 		return 0, richerror.New(op).WithKind(richerror.KindUnexpected).
 			WithErr(err).WithMessage(errmsg.ErrorMsgSomethingWentWrong)

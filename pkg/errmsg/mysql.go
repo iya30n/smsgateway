@@ -1,4 +1,4 @@
-package mysql
+package errmsg
 
 import (
 	"context"

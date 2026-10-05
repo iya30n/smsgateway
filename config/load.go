@@ -16,6 +16,9 @@ func Load() Config {
 	}
 
 	return Config{
+		HttpServer: HttpServer{
+			Port: getEnv[string]("HTTP_PORT", "8080"),
+		},
 		Mysql: mysqlAdapter.Config{
 			Username: getEnv[string]("DB_USERNAME", "root"),
 			Password: getEnv[string]("DB_PASSWORD", "smsgw@1234"),

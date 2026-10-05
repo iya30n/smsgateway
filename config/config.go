@@ -5,5 +5,10 @@ import (
 )
 
 type Config struct {
+	HttpServer     HttpServer
 	Mysql          mysqlAdapter.Config
+}
+
+type HttpServer struct {
+	Port string
 }

@@ -3,8 +3,10 @@ module smsgateway
 go 1.25.4
 
 require (
+	github.com/go-ozzo/ozzo-validation/v4 v4.4.1
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/joho/godotenv v1.5.1
+	github.com/labstack/echo/v5 v5.4.0
 	github.com/rubenv/sql-migrate v1.8.1
 	github.com/shopspring/decimal v1.4.0
 )
