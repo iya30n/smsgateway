@@ -17,6 +17,7 @@ func Load() Config {
 
 	return Config{
 		HttpServer: HttpServer{
+			Host: getEnv[string]("HTTP_HOST", "127.0.0.1"),
 			Port: getEnv[string]("HTTP_PORT", "8080"),
 		},
 		Mysql: mysqlAdapter.Config{

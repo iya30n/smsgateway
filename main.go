@@ -44,8 +44,7 @@ func main() {
 	userHandler.SetupRoutes()
 
 	sc := echo.StartConfig{
-		// TODO: put the host into HttpServer config
-		Address:         fmt.Sprintf("127.0.0.1:%s", cnf.HttpServer.Port),
+		Address:         fmt.Sprintf("%s:%s", cnf.HttpServer.Host, cnf.HttpServer.Port),
 		GracefulTimeout: time.Second * 30,
 	}
 

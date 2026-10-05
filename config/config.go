@@ -10,5 +10,6 @@ type Config struct {
 }
 
 type HttpServer struct {
+	Host string
 	Port string
 }
