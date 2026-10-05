@@ -18,5 +18,5 @@ const (
 	TransactionTypeSmsCharge TransactionType = "sms_charge"
 	TransactionTypeRefund TransactionType = "refund"
 	TransactionTypeReversal TransactionType = "reversal"
-	TransactionTypemanualAdjustment TransactionType = "manual_adjustment"
+	TransactionTypeManualAdjustment TransactionType = "manual_adjustment"
 )
