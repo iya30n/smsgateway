@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	mysqlAdapter "smsgateway/adapter/mysql"
 	"strconv"
 	"time"
 
@@ -15,7 +16,13 @@ func Load() Config {
 	}
 
 	return Config{
-		
+		Mysql: mysqlAdapter.Config{
+			Username: getEnv[string]("DB_USERNAME", "root"),
+			Password: getEnv[string]("DB_PASSWORD", "smsgw@1234"),
+			Host:     getEnv[string]("DB_HOST", "127.0.0.1"),
+			Port:     getEnv[string]("DB_PORT", "3306"),
+			DBName:   getEnv[string]("DB_NAME", "smsgateway"),
+		},
 	}
 }
 
