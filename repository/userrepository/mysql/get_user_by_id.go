@@ -15,7 +15,7 @@ func (m *MysqlUserRepository) GetUserByID(userID uint) (entity.User, error) {
 	user, err := scanUser(row)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			err = errmsg.WrapMySQLError(fmt.Sprintf("get user %s for update", userID), err)
+			err = errmsg.WrapMySQLError(fmt.Sprintf("get user %d", userID), err)
 			return user, richerror.New(op).WithKind(richerror.KindNotFound).
 				WithMessage(err.Error())
 		}

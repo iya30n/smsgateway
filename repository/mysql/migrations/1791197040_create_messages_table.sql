@@ -7,6 +7,7 @@ CREATE TABLE messages(
     `origin_number` VARCHAR(20) NOT NULL,
     `destination_number` VARCHAR(20) NOT NULL,
     `content` TEXT NOT NULL,
+    `type` ENUM('normal', 'express') NOT NULL DEFAULT 'normal',
     `status` ENUM('initiated', 'queued', 'sent', 'failed') NOT NULL DEFAULT 'initiated',
     `failed_reason` TEXT NULL,
     `created_at` BIGINT NOT NULL,

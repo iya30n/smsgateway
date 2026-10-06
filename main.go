@@ -7,10 +7,13 @@ import (
 	"os/signal"
 	mysqlAdapter "smsgateway/adapter/mysql"
 	"smsgateway/config"
+	"smsgateway/delivery/httpserver/smshandler"
 	"smsgateway/delivery/httpserver/userhandler"
 	"smsgateway/repository/migrator"
+	smsmysqlrepository "smsgateway/repository/smsrepository/mysql"
 	usermysqlrepository "smsgateway/repository/userrepository/mysql"
 	"smsgateway/service"
+	"smsgateway/validator/smsvalidator"
 	"smsgateway/validator/uservalidator"
 	"syscall"
 	"time"
@@ -33,15 +36,21 @@ func main() {
 
 	// repositories
 	userRepo := usermysqlrepository.NewMysql(mysqlAdapter)
+	smsRepo := smsmysqlrepository.NewMysql(mysqlAdapter)
 
 	// services
 	userSvc := service.NewUserService(userRepo)
+	smsSvc := service.NewSMSService(smsRepo)
 
 	e := echo.New()
 
 	// user routes
 	userHandler := userhandler.New(e, userSvc, uservalidator.New(userRepo))
 	userHandler.SetupRoutes()
+
+	// sms routes
+	smsHandler := smshandler.New(e, smsSvc, smsvalidator.New(userRepo))
+	smsHandler.SetupRoutes()
 
 	sc := echo.StartConfig{
 		Address:         fmt.Sprintf("%s:%s", cnf.HttpServer.Host, cnf.HttpServer.Port),

@@ -7,8 +7,7 @@ type Transaction struct {
 	UserID uint
 	BalanceRequestID uint
 	MessageID uint
-	Credit decimal.Decimal
-	Debit decimal.Decimal
+	Amount decimal.Decimal
 	Type TransactionType
 }
 

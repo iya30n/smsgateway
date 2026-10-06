@@ -7,6 +7,7 @@ CREATE TABLE wages(
     `created_at` BIGINT NOT NULL,
     CONSTRAINT `fk_wages_user_id`
         FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),
+    UNIQUE INDEX `uk_wage_type_user_id` (`type`,`user_id`),
     INDEX `idx_wages_user_id` (`user_id`)
 );
 

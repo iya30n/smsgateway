@@ -4,8 +4,7 @@ CREATE TABLE transactions(
     `user_id` BIGINT UNSIGNED NOT NULL,
     `balance_request_id` BIGINT UNSIGNED NULL,
     `message_id` BIGINT UNSIGNED NULL,
-    `credit` DECIMAL(20,2) NOT NULL DEFAULT 0,
-    `debit` DECIMAL(20,2) NOT NULL DEFAULT 0,
+    `amount` DECIMAL(20,2) NOT NULL DEFAULT 0,
     `type` ENUM('sms_charge', 'refund', 'reversal', 'manual_adjustment') NOT NULL,
     CONSTRAINT `fk_transactions_user_id`
         FOREIGN KEY (`user_id`) REFERENCES `users`(`id`),

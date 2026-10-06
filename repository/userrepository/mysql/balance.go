@@ -38,13 +38,13 @@ func (m *MysqlUserRepository) IncreaseBalance(ctx context.Context, userID uint, 
 				WithMessage(errmsg.ErrorMsgNotFound)
 		}
 
-		err = errmsg.WrapMySQLError(fmt.Sprintf("get user %s for update", userID), err)
+		err = errmsg.WrapMySQLError(fmt.Sprintf("get user %d for update", userID), err)
 		return 0, richerror.New(op).WithErr(err).WithKind(richerror.KindUnexpected).
 			WithMessage(err.Error())
 	}
 
 	if _, err := tx.Exec("UPDATE users SET balance = balance + ? WHERE id = ?", amount, userID); err != nil {
-		err = errmsg.WrapMySQLError(fmt.Sprintf("increase user %s balance", userID), err)
+		err = errmsg.WrapMySQLError(fmt.Sprintf("increase user %d balance", userID), err)
 		return newBalance, richerror.New(op).WithKind(richerror.KindUnexpected).
 			WithErr(err).WithMessage(err.Error())
 	}
@@ -66,4 +66,24 @@ func (m *MysqlUserRepository) IncreaseBalance(ctx context.Context, userID uint, 
 	}
 
 	return newBalance, nil
+}
+
+func (m *MysqlUserRepository) HasEnoughBalanceForSMS(userID uint, smsType entity.SmsType) (bool, error) {
+	const op = "mysqluserrepo.HasEnoughBalanceForSMS"
+
+	var balance float64
+	if err := m.adapter.Client().QueryRow("SELECT balance FROM users WHERE id = ?", userID).Scan(&balance); err != nil {
+		err = errmsg.WrapMySQLError(fmt.Sprintf("get user %d for update", userID), err)
+		return false, richerror.New(op).WithKind(richerror.KindUnexpected).
+			WithErr(err).WithMessage(errmsg.ErrorMsgSomethingWentWrong)
+	}
+
+	var smsWageAmount float64
+	if err := m.adapter.Client().QueryRow("SELECT amount FROM wages WHERE (user_id = ? AND type = ?) OR (type = ?)", userID, smsType, entity.SmsTypeExpress).Scan(&smsWageAmount); err != nil {
+		err = errmsg.WrapMySQLError(fmt.Sprintf("get user %d for update", userID), err)
+		return false, richerror.New(op).WithKind(richerror.KindUnexpected).
+			WithErr(err).WithMessage(errmsg.ErrorMsgSomethingWentWrong)
+	}
+
+	return balance >= smsWageAmount, nil
 }

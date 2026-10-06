@@ -5,12 +5,4 @@ type SmsNumber struct {
 	Number string
 	OperatorID uint
 	IsActive bool
-	Type SmsType
 }
-
-type SmsType string
-
-const (
-	SmsTypeNormal SmsType = "normal"
-	SmsTypeExpress SmsType = "express"
-);
