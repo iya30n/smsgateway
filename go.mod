@@ -14,4 +14,5 @@ require (
 require (
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/go-gorp/gorp/v3 v3.1.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 )
