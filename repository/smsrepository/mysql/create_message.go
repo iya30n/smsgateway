@@ -55,9 +55,9 @@ func (m MysqlSMSRepository) CreateMessage(ctx context.Context, message entity.Me
 	}
 
 	result, err := tx.ExecContext(ctx, `
-		INSERT INTO messages (user_id, idempotency_key, destination_number, content, type, status)
-		VALUES (?,?,?,?,?,?)
-	`, message.UserID, message.IdempotencyKey, message.DestinationNumber, message.Content, message.Type, message.Status)
+		INSERT INTO messages (user_id, idempotency_key, source_number, receptor_number, content, type, status)
+		VALUES (?,?,?,?,?,?,?)
+	`, message.UserID, message.IdempotencyKey, message.SourceNumber, message.ReceptorNumber, message.Content, message.Type, message.Status)
 	if err != nil {
 		err = errmsg.WrapMySQLError(fmt.Sprintf("insert message for user %d", message.UserID), err)
 		return richerror.New(op).WithKind(richerror.KindUnexpected).

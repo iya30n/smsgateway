@@ -4,9 +4,8 @@ type Message struct {
 	ID uint
 	UserID uint
 	IdempotencyKey string
-	OperatorID uint
-	OriginNumber string
-	DestinationNumber string
+	SourceNumber string
+	ReceptorNumber string
 	Content string
 	Type SmsType
 	Status MessageStatus
@@ -30,4 +29,3 @@ const (
 	MessageStatusSent MessageStatus = "sent"
 	MessageStatusFailed MessageStatus = "failed"
 )
-

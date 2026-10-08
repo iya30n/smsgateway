@@ -20,10 +20,11 @@ type SMSRepository interface {
 
 type SendSMSRequest struct {
 	IdempotencyKey string       `json:"idempotency_key"`
-	UserID       uint         `json:"user_id"`
-	MobileNumber string         `json:"mobile_number"`
-	Content      string         `json:"content"`
-	SmsType      entity.SmsType `json:"sms_type"`
+	UserID         uint         `json:"user_id"`
+	SourceNumber   string       `json:"source_number"`
+	ReceptorNumber       string       `json:"receptor_number"`
+	Content        string       `json:"content"`
+	SmsType        entity.SmsType `json:"sms_type"`
 }
 
 type SendSMSResponse struct {
@@ -32,8 +33,6 @@ type SendSMSResponse struct {
 }
 
 func (s SMSService) SendNormalSMS(ctx context.Context, req SendSMSRequest) (SendSMSResponse, error) {
-	// TODO: think about origin number
-
 	existingMessage, err := s.smsRepo.GetByIdempotencyKey(ctx, req.IdempotencyKey)
 	if err != nil {
 		return SendSMSResponse{}, err
@@ -46,15 +45,13 @@ func (s SMSService) SendNormalSMS(ctx context.Context, req SendSMSRequest) (Send
 		}, nil
 	}
 
-	// TODO: implement circuit breaker pattern to choose a stable operator
-	// TODO: implement logic to choose an available origin number for the message
-
 	message := entity.Message{
-		UserID:            req.UserID,
-		DestinationNumber: req.MobileNumber,
-		Content:           req.Content,
-		Type:              entity.SmsTypeNormal,
-		Status:            entity.MessageStatusInitiated,
+		UserID:       req.UserID,
+		SourceNumber: req.SourceNumber,
+		ReceptorNumber:     req.ReceptorNumber,
+		Content:      req.Content,
+		Type:         entity.SmsTypeNormal,
+		Status:       entity.MessageStatusInitiated,
 	}
 
 	// TODO: send the message to queue

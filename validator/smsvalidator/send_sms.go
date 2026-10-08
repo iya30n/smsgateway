@@ -19,7 +19,8 @@ func (v Validator) ValidateSendSMSRequest(r service.SendSMSRequest) (map[string]
 		validation.Field(&r.UserID, validation.Required, validation.Length(11, 11), validation.By(func(value interface{}) error {
 			return v.userHasEnoughBalance(r, value)
 		})),
-		validation.Field(&r.MobileNumber, validation.Required, validation.Length(11, 11), validation.Match(regexp.MustCompile(mobileNumberRegex))),
+		validation.Field(&r.SourceNumber, validation.Required, validation.Length(7, 14), validation.Match(regexp.MustCompile(mobileNumberRegex))),
+		validation.Field(&r.ReceptorNumber, validation.Required, validation.Length(11, 11), validation.Match(regexp.MustCompile(mobileNumberRegex))),
 		validation.Field(&r.Content, validation.Required, validation.Length(1, 160)),
 	)
 
