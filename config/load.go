@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	mysqlAdapter "smsgateway/adapter/mysql"
+	smsoperator "smsgateway/adapter/sms_operator"
 	"strconv"
 	"time"
 
@@ -26,6 +27,11 @@ func Load() Config {
 			Host:     getEnv[string]("DB_HOST", "127.0.0.1"),
 			Port:     getEnv[string]("DB_PORT", "3306"),
 			DBName:   getEnv[string]("DB_NAME", "smsgateway"),
+		},
+		FirstOperator: smsoperator.Config{
+			BaseURL: getEnv[string]("FIRST_OPERATOR_BASE_URL", "https://api.first-operator.ir"),
+			APIKey:  getEnv[string]("FIRST_OPERATOR_API_KEY", ""),
+			Timeout: getEnv[time.Duration]("FIRST_OPERATOR_TIMEOUT", time.Second*10),
 		},
 	}
 }
