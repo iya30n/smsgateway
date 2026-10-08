@@ -9,6 +9,7 @@ require (
 	github.com/labstack/echo/v5 v5.4.0
 	github.com/rubenv/sql-migrate v1.8.1
 	github.com/shopspring/decimal v1.4.0
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
