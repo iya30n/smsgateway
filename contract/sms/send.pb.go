@@ -21,31 +21,32 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type RecievedMessage struct {
+type SmsRequest struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	IdempotencyKey string                 `protobuf:"bytes,1,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
 	MessageId      int64                  `protobuf:"varint,2,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
 	SourceNumber   string                 `protobuf:"bytes,3,opt,name=source_number,json=sourceNumber,proto3" json:"source_number,omitempty"`
 	ReceptorNumber string                 `protobuf:"bytes,4,opt,name=receptor_number,json=receptorNumber,proto3" json:"receptor_number,omitempty"`
 	Content        string                 `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
+	Attempt        int32                  `protobuf:"varint,6,opt,name=attempt,proto3" json:"attempt,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
 
-func (x *RecievedMessage) Reset() {
-	*x = RecievedMessage{}
+func (x *SmsRequest) Reset() {
+	*x = SmsRequest{}
 	mi := &file_contract_sms_send_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RecievedMessage) String() string {
+func (x *SmsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RecievedMessage) ProtoMessage() {}
+func (*SmsRequest) ProtoMessage() {}
 
-func (x *RecievedMessage) ProtoReflect() protoreflect.Message {
+func (x *SmsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_contract_sms_send_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -57,58 +58,67 @@ func (x *RecievedMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RecievedMessage.ProtoReflect.Descriptor instead.
-func (*RecievedMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use SmsRequest.ProtoReflect.Descriptor instead.
+func (*SmsRequest) Descriptor() ([]byte, []int) {
 	return file_contract_sms_send_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *RecievedMessage) GetIdempotencyKey() string {
+func (x *SmsRequest) GetIdempotencyKey() string {
 	if x != nil {
 		return x.IdempotencyKey
 	}
 	return ""
 }
 
-func (x *RecievedMessage) GetMessageId() int64 {
+func (x *SmsRequest) GetMessageId() int64 {
 	if x != nil {
 		return x.MessageId
 	}
 	return 0
 }
 
-func (x *RecievedMessage) GetSourceNumber() string {
+func (x *SmsRequest) GetSourceNumber() string {
 	if x != nil {
 		return x.SourceNumber
 	}
 	return ""
 }
 
-func (x *RecievedMessage) GetReceptorNumber() string {
+func (x *SmsRequest) GetReceptorNumber() string {
 	if x != nil {
 		return x.ReceptorNumber
 	}
 	return ""
 }
 
-func (x *RecievedMessage) GetContent() string {
+func (x *SmsRequest) GetContent() string {
 	if x != nil {
 		return x.Content
 	}
 	return ""
 }
 
+func (x *SmsRequest) GetAttempt() int32 {
+	if x != nil {
+		return x.Attempt
+	}
+	return 0
+}
+
 var File_contract_sms_send_proto protoreflect.FileDescriptor
 
 const file_contract_sms_send_proto_rawDesc = "" +
 	"\n" +
-	"\x17contract/sms/send.proto\x12\bpresence\"\xc1\x01\n" +
-	"\x0fRecievedMessage\x12'\n" +
+	"\x17contract/sms/send.proto\x12\bpresence\"\xd6\x01\n" +
+	"\n" +
+	"SmsRequest\x12'\n" +
 	"\x0fidempotency_key\x18\x01 \x01(\tR\x0eidempotencyKey\x12\x1d\n" +
 	"\n" +
 	"message_id\x18\x02 \x01(\x03R\tmessageId\x12#\n" +
 	"\rsource_number\x18\x03 \x01(\tR\fsourceNumber\x12'\n" +
 	"\x0freceptor_number\x18\x04 \x01(\tR\x0ereceptorNumber\x12\x18\n" +
-	"\acontent\x18\x05 \x01(\tR\acontentB Z\x1esmsgateway/contract/golang/smsb\x06proto3"
+	"\acontent\x18\x05 \x01(\tR\acontent\x12\x18\n" +
+	"\aattempt\x18\x06 \x01(\x05R\aattemptB Z\x1esmsgateway/contract/golang/smsb\x06proto3"
 
 var (
 	file_contract_sms_send_proto_rawDescOnce sync.Once
@@ -124,7 +134,7 @@ func file_contract_sms_send_proto_rawDescGZIP() []byte {
 
 var file_contract_sms_send_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_contract_sms_send_proto_goTypes = []any{
-	(*RecievedMessage)(nil), // 0: presence.RecievedMessage
+	(*SmsRequest)(nil), // 0: presence.SmsRequest
 }
 var file_contract_sms_send_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
