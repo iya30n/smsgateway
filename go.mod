@@ -7,6 +7,7 @@ require (
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v5 v5.4.0
+	github.com/rabbitmq/amqp091-go v1.15.0
 	github.com/rubenv/sql-migrate v1.8.1
 	github.com/shopspring/decimal v1.4.0
 	google.golang.org/protobuf v1.33.0

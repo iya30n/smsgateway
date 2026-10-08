@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	mysqlAdapter "smsgateway/adapter/mysql"
+	rabbitmqAdapter "smsgateway/adapter/rabbitmq"
 	smsoperator "smsgateway/adapter/sms_operator"
 	"strconv"
 	"time"
@@ -32,6 +33,16 @@ func Load() Config {
 			BaseURL: getEnv[string]("FIRST_OPERATOR_BASE_URL", "https://api.first-operator.ir"),
 			APIKey:  getEnv[string]("FIRST_OPERATOR_API_KEY", ""),
 			Timeout: getEnv[time.Duration]("FIRST_OPERATOR_TIMEOUT", time.Second*10),
+		},
+		RabbitMQ: rabbitmqAdapter.Config{
+			Username:      getEnv[string]("RABBITMQ_USERNAME", "guest"),
+			Password:      getEnv[string]("RABBITMQ_PASSWORD", "guest"),
+			Host:          getEnv[string]("RABBITMQ_HOST", "127.0.0.1"),
+			Port:          getEnv[string]("RABBITMQ_PORT", "5672"),
+			Vhost:         getEnv[string]("RABBITMQ_VHOST", "/"),
+			Heartbeat:     getEnv[time.Duration]("RABBITMQ_HEARTBEAT", time.Second*10),
+			DialTimeout:   getEnv[time.Duration]("RABBITMQ_DIAL_TIMEOUT", time.Second*30),
+			PrefetchCount: getEnv[int]("RABBITMQ_PREFETCH_COUNT", 1),
 		},
 	}
 }
