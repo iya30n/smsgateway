@@ -10,7 +10,10 @@ import (
 	"smsgateway/pkg/richerror"
 )
 
-func (m MysqlSMSRepository) CreateMessage(ctx context.Context, message entity.Message) error {
+// CreateMessage charges the user's balance and persists the message in one
+// transaction. The caller gets the assigned ID back through the pointer so it
+// can be carried into the queue payload.
+func (m MysqlSMSRepository) CreateMessage(ctx context.Context, message *entity.Message) error {
 	const op = "mysqlsmsrepo.CreateMessage"
 
 	tx, err := m.adapter.Client().BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
@@ -63,12 +66,19 @@ func (m MysqlSMSRepository) CreateMessage(ctx context.Context, message entity.Me
 			WithErr(err).WithMessage(err.Error())
 	}
 
-	messageId, _ := result.LastInsertId()
+	messageID, err := result.LastInsertId()
+	if err != nil {
+		err = errmsg.WrapMySQLError(fmt.Sprintf("get inserted message id for user %d", message.UserID), err)
+		return richerror.New(op).WithKind(richerror.KindUnexpected).
+			WithErr(err).WithMessage(errmsg.ErrorMsgSomethingWentWrong)
+	}
+
+	message.ID = uint(messageID)
 
 	if _, err := tx.ExecContext(ctx, `
 		INSERT INTO transactions (user_id, message_id, amount, type)
 		VALUES (?,?,?,?)
-	`, message.UserID, messageId, smsWageAmount, entity.TransactionTypeSmsCharge); err != nil {
+	`, message.UserID, message.ID, smsWageAmount, entity.TransactionTypeSmsCharge); err != nil {
 		err = errmsg.WrapMySQLError(fmt.Sprintf("insert transaction for user %d", message.UserID), err)
 		return richerror.New(op).WithKind(richerror.KindUnexpected).
 			WithErr(err).WithMessage(err.Error())
