@@ -121,6 +121,98 @@ func (x *SmsRequest) GetUserId() uint64 {
 	return 0
 }
 
+type ExpressSmsRequest struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	IdempotencyKey string                 `protobuf:"bytes,1,opt,name=idempotency_key,json=idempotencyKey,proto3" json:"idempotency_key,omitempty"`
+	MessageId      int64                  `protobuf:"varint,2,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	ReceptorNumber string                 `protobuf:"bytes,4,opt,name=receptor_number,json=receptorNumber,proto3" json:"receptor_number,omitempty"`
+	Content        string                 `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
+	Attempt        int32                  `protobuf:"varint,6,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	OperatorId     uint64                 `protobuf:"varint,7,opt,name=operator_id,json=operatorId,proto3" json:"operator_id,omitempty"`
+	UserId         uint64                 `protobuf:"varint,8,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ExpressSmsRequest) Reset() {
+	*x = ExpressSmsRequest{}
+	mi := &file_contract_sms_send_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExpressSmsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExpressSmsRequest) ProtoMessage() {}
+
+func (x *ExpressSmsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_contract_sms_send_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExpressSmsRequest.ProtoReflect.Descriptor instead.
+func (*ExpressSmsRequest) Descriptor() ([]byte, []int) {
+	return file_contract_sms_send_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ExpressSmsRequest) GetIdempotencyKey() string {
+	if x != nil {
+		return x.IdempotencyKey
+	}
+	return ""
+}
+
+func (x *ExpressSmsRequest) GetMessageId() int64 {
+	if x != nil {
+		return x.MessageId
+	}
+	return 0
+}
+
+func (x *ExpressSmsRequest) GetReceptorNumber() string {
+	if x != nil {
+		return x.ReceptorNumber
+	}
+	return ""
+}
+
+func (x *ExpressSmsRequest) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *ExpressSmsRequest) GetAttempt() int32 {
+	if x != nil {
+		return x.Attempt
+	}
+	return 0
+}
+
+func (x *ExpressSmsRequest) GetOperatorId() uint64 {
+	if x != nil {
+		return x.OperatorId
+	}
+	return 0
+}
+
+func (x *ExpressSmsRequest) GetUserId() uint64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
 var File_contract_sms_send_proto protoreflect.FileDescriptor
 
 const file_contract_sms_send_proto_rawDesc = "" +
@@ -132,6 +224,16 @@ const file_contract_sms_send_proto_rawDesc = "" +
 	"\n" +
 	"message_id\x18\x02 \x01(\x03R\tmessageId\x12#\n" +
 	"\rsource_number\x18\x03 \x01(\tR\fsourceNumber\x12'\n" +
+	"\x0freceptor_number\x18\x04 \x01(\tR\x0ereceptorNumber\x12\x18\n" +
+	"\acontent\x18\x05 \x01(\tR\acontent\x12\x18\n" +
+	"\aattempt\x18\x06 \x01(\x05R\aattempt\x12\x1f\n" +
+	"\voperator_id\x18\a \x01(\x04R\n" +
+	"operatorId\x12\x17\n" +
+	"\auser_id\x18\b \x01(\x04R\x06userId\"\xf2\x01\n" +
+	"\x11ExpressSmsRequest\x12'\n" +
+	"\x0fidempotency_key\x18\x01 \x01(\tR\x0eidempotencyKey\x12\x1d\n" +
+	"\n" +
+	"message_id\x18\x02 \x01(\x03R\tmessageId\x12'\n" +
 	"\x0freceptor_number\x18\x04 \x01(\tR\x0ereceptorNumber\x12\x18\n" +
 	"\acontent\x18\x05 \x01(\tR\acontent\x12\x18\n" +
 	"\aattempt\x18\x06 \x01(\x05R\aattempt\x12\x1f\n" +
@@ -151,9 +253,10 @@ func file_contract_sms_send_proto_rawDescGZIP() []byte {
 	return file_contract_sms_send_proto_rawDescData
 }
 
-var file_contract_sms_send_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_contract_sms_send_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_contract_sms_send_proto_goTypes = []any{
-	(*SmsRequest)(nil), // 0: presence.SmsRequest
+	(*SmsRequest)(nil),        // 0: presence.SmsRequest
+	(*ExpressSmsRequest)(nil), // 1: presence.ExpressSmsRequest
 }
 var file_contract_sms_send_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -174,7 +277,7 @@ func file_contract_sms_send_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_contract_sms_send_proto_rawDesc), len(file_contract_sms_send_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

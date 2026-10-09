@@ -12,7 +12,7 @@ import (
 
 // i have defined send express as a separate function because it may have different logic in the real-world scenario.
 func (h Handler) SendExpressSMS(c *echo.Context) error {
-	var req smsparam.SendSMSRequest
+	var req smsparam.SendExpressSMSRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, errmsg.ErrorMsgInvalidInput)
 	}
@@ -21,7 +21,7 @@ func (h Handler) SendExpressSMS(c *echo.Context) error {
 
 	req.SmsType = entity.SmsTypeExpress
 
-	errFields, err := h.smsValidator.ValidateSendSMSRequest(req)
+	errFields, err := h.smsValidator.ValidateSendExpressSMSRequest(req)
 	if err != nil {
 		code, msg := httpmsg.MapRichErrKindsToHttpResponse(err)
 		return c.JSON(code, map[string]any{
