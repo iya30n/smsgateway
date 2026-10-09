@@ -31,7 +31,8 @@ func (h Handler) SendNormalSMS(c *echo.Context) error {
 
 	response, err := h.smsSvc.SendNormalSMS(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(httpmsg.MapRichErrKindsToHttpResponse(err))
+		code, msg := httpmsg.MapRichErrKindsToHttpResponse(err)
+		return c.JSON(code, map[string]any{"message": msg})
 	}
 
 	return c.JSON(http.StatusOK, response)

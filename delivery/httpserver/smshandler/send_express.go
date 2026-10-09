@@ -32,7 +32,8 @@ func (h Handler) SendExpressSMS(c *echo.Context) error {
 
 	response, err := h.smsSvc.SendExpressSMS(c.Request().Context(), req)
 	if err != nil {
-		return echo.NewHTTPError(httpmsg.MapRichErrKindsToHttpResponse(err))
+		code, msg := httpmsg.MapRichErrKindsToHttpResponse(err)
+		return c.JSON(code, map[string]any{"message": msg})
 	}
 
 	return c.JSON(http.StatusOK, response)
