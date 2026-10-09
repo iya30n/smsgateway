@@ -29,6 +29,8 @@ type SmsRequest struct {
 	ReceptorNumber string                 `protobuf:"bytes,4,opt,name=receptor_number,json=receptorNumber,proto3" json:"receptor_number,omitempty"`
 	Content        string                 `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
 	Attempt        int32                  `protobuf:"varint,6,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	OperatorId     uint64                 `protobuf:"varint,7,opt,name=operator_id,json=operatorId,proto3" json:"operator_id,omitempty"`
+	UserId         uint64                 `protobuf:"varint,8,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -105,11 +107,25 @@ func (x *SmsRequest) GetAttempt() int32 {
 	return 0
 }
 
+func (x *SmsRequest) GetOperatorId() uint64 {
+	if x != nil {
+		return x.OperatorId
+	}
+	return 0
+}
+
+func (x *SmsRequest) GetUserId() uint64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
 var File_contract_sms_send_proto protoreflect.FileDescriptor
 
 const file_contract_sms_send_proto_rawDesc = "" +
 	"\n" +
-	"\x17contract/sms/send.proto\x12\bpresence\"\xd6\x01\n" +
+	"\x17contract/sms/send.proto\x12\bpresence\"\x90\x02\n" +
 	"\n" +
 	"SmsRequest\x12'\n" +
 	"\x0fidempotency_key\x18\x01 \x01(\tR\x0eidempotencyKey\x12\x1d\n" +
@@ -118,7 +134,10 @@ const file_contract_sms_send_proto_rawDesc = "" +
 	"\rsource_number\x18\x03 \x01(\tR\fsourceNumber\x12'\n" +
 	"\x0freceptor_number\x18\x04 \x01(\tR\x0ereceptorNumber\x12\x18\n" +
 	"\acontent\x18\x05 \x01(\tR\acontent\x12\x18\n" +
-	"\aattempt\x18\x06 \x01(\x05R\aattemptB Z\x1esmsgateway/contract/golang/smsb\x06proto3"
+	"\aattempt\x18\x06 \x01(\x05R\aattempt\x12\x1f\n" +
+	"\voperator_id\x18\a \x01(\x04R\n" +
+	"operatorId\x12\x17\n" +
+	"\auser_id\x18\b \x01(\x04R\x06userIdB Z\x1esmsgateway/contract/golang/smsb\x06proto3"
 
 var (
 	file_contract_sms_send_proto_rawDescOnce sync.Once
