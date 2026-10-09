@@ -3,16 +3,16 @@ package smshandler
 import (
 	"net/http"
 	"smsgateway/entity"
+	"smsgateway/param/smsparam"
 	"smsgateway/pkg/errmsg"
 	"smsgateway/pkg/httpmsg"
-	"smsgateway/service"
 
 	"github.com/labstack/echo/v5"
 )
 
 // i have defined send express as a separate function because it may have different logic in the real-world scenario.
 func (h Handler) SendExpressSMS(c *echo.Context) error {
-	var req service.SendSMSRequest
+	var req smsparam.SendSMSRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, errmsg.ErrorMsgInvalidInput)
 	}

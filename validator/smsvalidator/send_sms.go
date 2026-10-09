@@ -5,12 +5,12 @@ import (
 	"regexp"
 	"smsgateway/pkg/errmsg"
 	"smsgateway/pkg/richerror"
-	"smsgateway/service"
+	"smsgateway/param/smsparam"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-func (v Validator) ValidateSendSMSRequest(r service.SendSMSRequest) (map[string]string, error) {
+func (v Validator) ValidateSendSMSRequest(r smsparam.SendSMSRequest) (map[string]string, error) {
 	const op = "validator.ValidateSendSMSRequest"
 	fieldErrors := make(map[string]string)
 
@@ -51,7 +51,7 @@ func (v Validator) ValidateSendSMSRequest(r service.SendSMSRequest) (map[string]
 		WithMeta(map[string]interface{}{"rq": r})
 }
 
-func (v Validator) userHasEnoughBalance(r service.SendSMSRequest, value interface{}) error {
+func (v Validator) userHasEnoughBalance(r smsparam.SendSMSRequest, value interface{}) error {
 	userID := value.(uint)
 	hasEnough, err := v.userRepo.HasEnoughBalanceForSMS(userID, r.SmsType)
 	if err != nil {

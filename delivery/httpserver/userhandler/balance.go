@@ -2,14 +2,14 @@ package userhandler
 
 import (
 	"net/http"
+	"smsgateway/param/userparam"
 	"smsgateway/pkg/httpmsg"
-	"smsgateway/service"
 
 	"github.com/labstack/echo/v5"
 )
 
 func (h Handler) IncreaseBalance(c *echo.Context) error {
-	var increaseBalanceReq service.IncreaseBalanceRequest
+	var increaseBalanceReq userparam.IncreaseBalanceRequest
 	if err := c.Bind(&increaseBalanceReq); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}

@@ -2,14 +2,14 @@ package uservalidator
 
 import (
 	"errors"
+	"smsgateway/param/userparam"
 	"smsgateway/pkg/errmsg"
 	"smsgateway/pkg/richerror"
-	"smsgateway/service"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-func (v Validator) ValidateIncreaseBalanceRequest(r service.IncreaseBalanceRequest) (map[string]string, error) {
+func (v Validator) ValidateIncreaseBalanceRequest(r userparam.IncreaseBalanceRequest) (map[string]string, error) {
 	const op = "validator.ValidateIncreaseBalanceRequest"
 	fieldErrors := make(map[string]string)
 

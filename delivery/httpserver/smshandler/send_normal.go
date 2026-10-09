@@ -3,15 +3,15 @@ package smshandler
 import (
 	"net/http"
 	"smsgateway/entity"
+	"smsgateway/param/smsparam"
 	"smsgateway/pkg/errmsg"
 	"smsgateway/pkg/httpmsg"
-	"smsgateway/service"
 
 	"github.com/labstack/echo/v5"
 )
 
 func (h Handler) SendNormalSMS(c *echo.Context) error {
-	var req service.SendSMSRequest
+	var req smsparam.SendSMSRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, errmsg.ErrorMsgInvalidInput)
 	}
@@ -29,7 +29,7 @@ func (h Handler) SendNormalSMS(c *echo.Context) error {
 		})
 	}
 
-	response, err := h.smsSvc.SendNormalSMS(c.Request().Context(),req)
+	response, err := h.smsSvc.SendNormalSMS(c.Request().Context(), req)
 	if err != nil {
 		return echo.NewHTTPError(httpmsg.MapRichErrKindsToHttpResponse(err))
 	}

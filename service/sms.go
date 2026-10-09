@@ -4,6 +4,7 @@ import (
 	"context"
 	"smsgateway/contract/sms"
 	"smsgateway/entity"
+	"smsgateway/param/smsparam"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -29,28 +30,14 @@ type MessageBroker interface {
 	SendToExpressQueue(ctx context.Context, body []byte) error
 }
 
-type SendSMSRequest struct {
-	IdempotencyKey string         `json:"idempotency_key"`
-	UserID         uint           `json:"user_id"`
-	SourceNumber   string         `json:"source_number"`
-	ReceptorNumber string         `json:"receptor_number"`
-	Content        string         `json:"content"`
-	SmsType        entity.SmsType `json:"sms_type"`
-}
-
-type SendSMSResponse struct {
-	Status     string `json:"status"`
-	SMSContent string `json:"sms_content"`
-}
-
-func (s SMSService) send(ctx context.Context, req SendSMSRequest) (SendSMSResponse, error) {
+func (s SMSService) send(ctx context.Context, req smsparam.SendSMSRequest) (smsparam.SendSMSResponse, error) {
 	existingMessage, err := s.smsRepo.GetByIdempotencyKey(ctx, req.IdempotencyKey)
 	if err != nil {
-		return SendSMSResponse{}, err
+		return smsparam.SendSMSResponse{}, err
 	}
 
 	if existingMessage != nil {
-		return SendSMSResponse{
+		return smsparam.SendSMSResponse{
 			Status:     string(existingMessage.Status),
 			SMSContent: existingMessage.Content,
 		}, nil
@@ -66,7 +53,7 @@ func (s SMSService) send(ctx context.Context, req SendSMSRequest) (SendSMSRespon
 	}
 
 	if err := s.smsRepo.CreateMessage(ctx, message); err != nil {
-		return SendSMSResponse{}, err
+		return smsparam.SendSMSResponse{}, err
 	}
 
 	body, err := proto.Marshal(&sms.SmsRequest{
@@ -83,38 +70,38 @@ func (s SMSService) send(ctx context.Context, req SendSMSRequest) (SendSMSRespon
 	if message.Type == entity.SmsTypeNormal {
 		if err := s.msgBroker.SendToNormalQueue(ctx, body); err != nil {
 			if err := s.smsRepo.UpdateStateToFailed(ctx, message); err != nil {
-				return SendSMSResponse{}, err
+				return smsparam.SendSMSResponse{}, err
 			}
 
 			// TODO: return rich error from send method on msg broker, and log error(s) in it.
-			return SendSMSResponse{}, err
+			return smsparam.SendSMSResponse{}, err
 		}
 	}
 
 	if message.Type == entity.SmsTypeExpress {
 		if err := s.msgBroker.SendToExpressQueue(ctx, body); err != nil {
 			if err := s.smsRepo.UpdateStateToFailed(ctx, message); err != nil {
-				return SendSMSResponse{}, err
+				return smsparam.SendSMSResponse{}, err
 			}
 
 			// TODO: return rich error from send method on msg broker, and log error(s) in it.
-			return SendSMSResponse{}, err
+			return smsparam.SendSMSResponse{}, err
 		}
 	}
 
 	message.Status = entity.MessageStatusQueued
 	s.smsRepo.UpdateState(ctx, message)
 
-	return SendSMSResponse{}, nil
+	return smsparam.SendSMSResponse{}, nil
 }
 
-func (s SMSService) SendNormalSMS(ctx context.Context, req SendSMSRequest) (SendSMSResponse, error) {
+func (s SMSService) SendNormalSMS(ctx context.Context, req smsparam.SendSMSRequest) (smsparam.SendSMSResponse, error) {
 	req.SmsType = entity.SmsTypeExpress
 
 	return s.send(ctx, req)
 }
 
-func (s SMSService) SendExpressSMS(ctx context.Context, req SendSMSRequest) (SendSMSResponse, error) {
+func (s SMSService) SendExpressSMS(ctx context.Context, req smsparam.SendSMSRequest) (smsparam.SendSMSResponse, error) {
 	req.SmsType = entity.SmsTypeExpress
 
 	return s.send(ctx, req)
