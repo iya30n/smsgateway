@@ -19,7 +19,7 @@ func NewSMSService(smsRepo SMSRepository) SMSService {
 }
 
 type SMSRepository interface {
-	CreateMessage(ctx context.Context, message entity.Message) error
+	CreateMessage(ctx context.Context, message *entity.Message) error
 	GetByIdempotencyKey(ctx context.Context, idempotencyKey string) (*entity.Message, error)
 	UpdateStateToFailed(ctx context.Context, message entity.Message) error
 	UpdateState(ctx context.Context, message entity.Message) error
@@ -52,7 +52,7 @@ func (s SMSService) send(ctx context.Context, req smsparam.SendSMSRequest) (smsp
 		Status:         entity.MessageStatusInitiated,
 	}
 
-	if err := s.smsRepo.CreateMessage(ctx, message); err != nil {
+	if err := s.smsRepo.CreateMessage(ctx, &message); err != nil {
 		return smsparam.SendSMSResponse{}, err
 	}
 
