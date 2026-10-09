@@ -1,6 +1,9 @@
 package smsoperator
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type Config struct {
 	BaseURL string
@@ -10,24 +13,19 @@ type Config struct {
 
 type FirstOperatorOperator struct {
 	config Config
-	// Add any necessary fields for the operator, such as API client
 }
 
 func NewFirstOperatorOperator(config Config) *FirstOperatorOperator {
-	return &FirstOperatorOperator{
-		config: config,
-		// Initialize any necessary fields
-	}
+	return &FirstOperatorOperator{config}
 }
 
-// Implement methods for the FirstOperatorOperator to send SMS messages, handle responses, etc.
-func (h *FirstOperatorOperator) GetName() string {
-	return "first operator"
-}
-
-func (h *FirstOperatorOperator) SendSMS(sourceNumber string, destinationNumber string, message string) error {
+func (h *FirstOperatorOperator) SendSMS(ctx context.Context, sourceNumber string, receptorNumber string, message string) uint {
 	// Implement the logic to send an SMS using First Operator's API
 	// This may involve making an HTTP request to h.config.BaseURL with the necessary parameters
 	// Handle the response and return any errors if the sending fails
-	return nil
+	return 200
+}
+
+func (h FirstOperatorOperator) IsRetryable(httpStatusCode uint) bool {
+	return (httpStatusCode >= 500 || httpStatusCode == 429)
 }

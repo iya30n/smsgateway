@@ -32,7 +32,6 @@ func (m MysqlSMSRepository) CreateMessage(ctx context.Context, message entity.Me
 
 	var smsWageAmount float64
 	if err := tx.QueryRow("SELECT amount FROM wages WHERE (user_id = ? AND type = ?) OR (type = ?)", message.UserID, message.Type, message.Type).Scan(&smsWageAmount); err != nil {
-		err = errmsg.WrapMySQLError(fmt.Sprintf("get user %d for update", message.UserID), err)
 		return richerror.New(op).WithKind(richerror.KindUnexpected).
 			WithErr(err).WithMessage(errmsg.ErrorMsgSomethingWentWrong)
 	}
