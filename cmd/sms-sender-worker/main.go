@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,13 +16,7 @@ import (
 )
 
 func main() {
-	queueName := os.Args[1]
-	if len(queueName) > 0 && (queueName != rabbitmq.QueueNormal || queueName != rabbitmq.QueueExpress) {
-		panic("invalid queue name!")
-	} else {
-		queueName = rabbitmq.QueueNormal
-		fmt.Println("normal queue selected by default!")
-	}
+	queueName := getQueueNameFromCli()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
@@ -53,4 +46,18 @@ func main() {
 	if err := worker.Run(ctx); err != nil {
 		// TODO: handle the error
 	}
+}
+
+func getQueueNameFromCli() string {
+	queueName := rabbitmq.QueueNormal
+	if len(os.Args) > 0 {
+		qParam := os.Args[1]
+		if qParam != rabbitmq.QueueNormal && qParam != rabbitmq.QueueExpress {
+			panic("invalid queue name!")
+		}
+
+		queueName = qParam
+	}
+
+	return queueName
 }
