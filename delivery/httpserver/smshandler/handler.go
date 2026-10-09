@@ -1,7 +1,7 @@
 package smshandler
 
 import (
-	"smsgateway/service"
+	"smsgateway/service/smsservice"
 	"smsgateway/validator/smsvalidator"
 
 	"github.com/labstack/echo/v5"
@@ -10,11 +10,11 @@ import (
 
 type Handler struct {
 	e            *echo.Echo
-	smsSvc       service.SMSService
+	smsSvc       smsservice.SMSService
 	smsValidator smsvalidator.Validator
 }
 
-func New(e *echo.Echo, smsSvc service.SMSService, smsValidator smsvalidator.Validator) Handler {
+func New(e *echo.Echo, smsSvc smsservice.SMSService, smsValidator smsvalidator.Validator) Handler {
 	return Handler{e: e, smsSvc: smsSvc, smsValidator: smsValidator}
 }
 
