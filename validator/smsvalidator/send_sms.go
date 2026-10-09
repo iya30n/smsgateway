@@ -1,11 +1,11 @@
 package smsvalidator
 
 import (
-	"errors"
 	"regexp"
+	"smsgateway/entity"
+	"smsgateway/param/smsparam"
 	"smsgateway/pkg/errmsg"
 	"smsgateway/pkg/richerror"
-	"smsgateway/param/smsparam"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -22,7 +22,6 @@ func (v Validator) ValidateSendSMSRequest(r smsparam.SendSMSRequest) (map[string
 		validation.Field(&r.SourceNumber, validation.Required, validation.Length(7, 14), validation.Match(regexp.MustCompile(mobileNumberRegex)), validation.By(func(value interface{}) error {
 			return v.sourceNumberIsActive(value)
 		})),
-		validation.Field(&r.SourceNumber, validation.Required, validation.Length(7, 14), validation.Match(regexp.MustCompile(mobileNumberRegex))),
 		validation.Field(&r.ReceptorNumber, validation.Required, validation.Length(11, 11), validation.Match(regexp.MustCompile(mobileNumberRegex))),
 		validation.Field(&r.Content, validation.Required, validation.Length(1, 160)),
 	)

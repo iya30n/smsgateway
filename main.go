@@ -10,9 +10,12 @@ import (
 	"smsgateway/delivery/httpserver/smshandler"
 	"smsgateway/delivery/httpserver/userhandler"
 	"smsgateway/repository/migrator"
+	operatormysqlrepository "smsgateway/repository/operatorrepository/mysql"
+	smsnumbermysqlrepository "smsgateway/repository/smsnumberrepository/mysql"
 	smsmysqlrepository "smsgateway/repository/smsrepository/mysql"
 	usermysqlrepository "smsgateway/repository/userrepository/mysql"
 	"smsgateway/service"
+	"smsgateway/service/smsservice"
 	"smsgateway/validator/smsvalidator"
 	"smsgateway/validator/uservalidator"
 	"syscall"
@@ -37,10 +40,13 @@ func main() {
 	// repositories
 	userRepo := usermysqlrepository.NewMysql(mysqlAdapter)
 	smsRepo := smsmysqlrepository.NewMysql(mysqlAdapter)
+	operatorRepo := operatormysqlrepository.NewMysql(mysqlAdapter)
+	smsNumberRepo := smsnumbermysqlrepository.NewMysql(mysqlAdapter)
 
 	// services
 	userSvc := service.NewUserService(userRepo)
-	smsSvc := service.NewSMSService(smsRepo)
+	operatorSvc := service.NewOperatorService(operatorRepo)
+	smsSvc := smsservice.NewSMSService(smsRepo, operatorSvc)
 
 	e := echo.New()
 
@@ -49,7 +55,7 @@ func main() {
 	userHandler.SetupRoutes()
 
 	// sms routes
-	smsHandler := smshandler.New(e, smsSvc, smsvalidator.New(userRepo))
+	smsHandler := smshandler.New(e, smsSvc, smsvalidator.New(userRepo, smsNumberRepo))
 	smsHandler.SetupRoutes()
 
 	sc := echo.StartConfig{
