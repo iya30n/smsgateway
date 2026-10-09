@@ -20,9 +20,11 @@ func NewFirstOperatorOperator(config Config) *FirstOperatorOperator {
 }
 
 func (h *FirstOperatorOperator) SendSMS(ctx context.Context, sourceNumber string, receptorNumber string, message string) uint {
-	// Implement the logic to send an SMS using First Operator's API
-	// This may involve making an HTTP request to h.config.BaseURL with the necessary parameters
-	// Handle the response and return any errors if the sending fails
+	// TODO:
+	// - Implement the logic to send an SMS using First Operator's API
+	// - This may involve making an HTTP request to h.config.BaseURL with the necessary parameters
+	// - Handle the response and return any errors if the sending fails
+	// - Add metrics and alert if failure rate has grown
 	return 200
 }
 

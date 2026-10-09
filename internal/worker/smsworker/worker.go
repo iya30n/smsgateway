@@ -3,7 +3,7 @@ package smsworker
 import (
 	"context"
 	"smsgateway/contract/sms"
-	"smsgateway/service"
+	"smsgateway/service/smsservice"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -15,11 +15,11 @@ const MaxAttempts = 3
 type Worker struct {
 	msgBroker MessageBrokerAdapter
 	smsOp     SmsOperator
-	smsSvc    service.SMSService
-	queueName	string
+	smsSvc    smsservice.SMSService
+	queueName string
 }
 
-func New(msgBroker MessageBrokerAdapter, smsOp SmsOperator, smsSvc service.SMSService, queueName string) *Worker {
+func New(msgBroker MessageBrokerAdapter, smsOp SmsOperator, smsSvc smsservice.SMSService, queueName string) *Worker {
 	return &Worker{msgBroker, smsOp, smsSvc, queueName}
 }
 

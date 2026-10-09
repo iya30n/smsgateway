@@ -45,7 +45,7 @@ func main() {
 
 	// services
 	userSvc := service.NewUserService(userRepo)
-	operatorSvc := service.NewOperatorService(operatorRepo)
+	operatorSvc := service.NewOperatorService(operatorRepo, smsNumberRepo)
 	smsSvc := smsservice.NewSMSService(smsRepo, operatorSvc)
 
 	e := echo.New()
