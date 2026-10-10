@@ -12,9 +12,10 @@ type SMSService struct {
 	operatorService service.OperatorService
 }
 
-func NewSMSService(smsRepo SMSRepository, operatorService service.OperatorService) SMSService {
+func NewSMSService(smsRepo SMSRepository, msgBroker MessageBroker, operatorService service.OperatorService) SMSService {
 	return SMSService{
 		smsRepo:         smsRepo,
+		msgBroker:       msgBroker,
 		operatorService: operatorService,
 	}
 }
