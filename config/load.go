@@ -1,12 +1,11 @@
 package config
 
 import (
+	"errors"
 	"os"
 	mysqlAdapter "smsgateway/adapter/mysql"
 	rabbitmqAdapter "smsgateway/adapter/rabbitmq"
-	redisAdapter "smsgateway/adapter/redis"
 	smsoperator "smsgateway/adapter/sms_operator"
-	capacityRedis "smsgateway/capacity/redis"
 	"strconv"
 	"time"
 
@@ -14,8 +13,7 @@ import (
 )
 
 func Load() Config {
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
 		panic(err)
 	}
 
@@ -45,18 +43,6 @@ func Load() Config {
 			Heartbeat:     getEnv[time.Duration]("RABBITMQ_HEARTBEAT", time.Second*10),
 			DialTimeout:   getEnv[time.Duration]("RABBITMQ_DIAL_TIMEOUT", time.Second*30),
 			PrefetchCount: getEnv[int]("RABBITMQ_PREFETCH_COUNT", 1),
-		},
-		Redis: redisAdapter.Config{
-			Host:     getEnv[string]("REDIS_HOST", "127.0.0.1"),
-			Port:     getEnv[string]("REDIS_PORT", "6379"),
-			Password: getEnv[string]("REDIS_PASSWORD", ""),
-			DB:       getEnv[int]("REDIS_DB", 0),
-		},
-		Capacity: capacityRedis.Config{
-			KeyPrefix:    getEnv[string]("CAPACITY_KEY_PREFIX", "capacity"),
-			SyncInterval: getEnv[time.Duration]("CAPACITY_SYNC_INTERVAL", time.Second*30),
-			WaitTimeout:  getEnv[time.Duration]("CAPACITY_WAIT_TIMEOUT", time.Second*10),
-			PollInterval: getEnv[time.Duration]("CAPACITY_POLL_INTERVAL", time.Millisecond*25),
 		},
 	}
 }

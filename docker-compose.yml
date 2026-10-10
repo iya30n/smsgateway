@@ -1,0 +1,113 @@
+# Shared environment for the Go services. Values are read from .env when
+# present; the defaults below point at the compose services by name.
+x-sms-env: &sms-env
+  HTTP_HOST: "0.0.0.0"
+  HTTP_PORT: "8080"
+
+  DB_HOST: ${DB_HOST:-mysql}
+  DB_PORT: ${DB_PORT:-3306}
+  DB_NAME: ${DB_NAME:-smsgateway}
+  DB_USERNAME: ${DB_USERNAME:-root}
+  DB_PASSWORD: ${DB_PASSWORD:-smsgw@1234}
+
+  RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+  RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+  RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-admin}
+  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-admin123}
+  RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+  RABBITMQ_HEARTBEAT: ${RABBITMQ_HEARTBEAT:-10s}
+  RABBITMQ_DIAL_TIMEOUT: ${RABBITMQ_DIAL_TIMEOUT:-30s}
+  RABBITMQ_PREFETCH_COUNT: ${RABBITMQ_PREFETCH_COUNT:-1}
+
+  FIRST_OPERATOR_BASE_URL: ${FIRST_OPERATOR_BASE_URL:-https://api.first-operator.ir}
+  FIRST_OPERATOR_API_KEY: ${FIRST_OPERATOR_API_KEY:-}
+  FIRST_OPERATOR_TIMEOUT: ${FIRST_OPERATOR_TIMEOUT:-10s}
+
+services:
+  mysql:
+    image: hub.hamdocker.ir/mysql:8.0
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: "smsgw@1234"
+    volumes:
+      - ~/Docker/mysql0:/var/lib/mysql
+    networks:
+      - smsgateway
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq-dev
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+      RABBITMQ_DEFAULT_VHOST: /
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smsgateway
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: smsgateway-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *sms-env
+    depends_on:
+      mysql:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smsgateway
+
+  normal_sms_worker:
+    build:
+      context: .
+      dockerfile: deploy/normal_sms_worker/Dockerfile
+    image: smsgateway-normal-worker
+    restart: unless-stopped
+    environment:
+      <<: *sms-env
+    depends_on:
+      mysql:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smsgateway
+
+  express_sms_worker:
+    build:
+      context: .
+      dockerfile: deploy/express_sms_wowrker/Dockerfile
+    image: smsgateway-express-worker
+    restart: unless-stopped
+    environment:
+      <<: *sms-env
+    depends_on:
+      mysql:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smsgateway
+
+networks:
+  smsgateway:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:

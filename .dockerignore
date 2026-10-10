@@ -1,0 +1,18 @@
+# Version control
+.git
+.gitignore
+
+# Secrets — injected as environment variables at runtime
+.env
+
+# Local tooling
+.claude
+.vscode
+.idea
+
+# Deployment files are not needed inside the build context
+deploy
+
+# Docs and OS noise
+*.md
+.DS_Store
