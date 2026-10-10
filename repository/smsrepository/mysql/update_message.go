@@ -10,6 +10,8 @@ import (
 	"smsgateway/entity"
 	"smsgateway/pkg/errmsg"
 	"smsgateway/pkg/richerror"
+
+	"github.com/shopspring/decimal"
 )
 
 func (m MysqlSMSRepository) UpdateState(ctx context.Context, message entity.Message) error {
@@ -63,8 +65,8 @@ func (m MysqlSMSRepository) UpdateStateToFailed(ctx context.Context, message ent
 		}
 	}()
 
-	var wageTrxAmount float64
-	if err := tx.QueryRow("SELECT amount FROM transactions WHERE message_id = ?", message.ID).Scan(&wageTrxAmount); err != nil {
+	var wageTrxAmount decimal.Decimal
+	if err := tx.QueryRowContext(ctx, "SELECT amount FROM transactions WHERE message_id = ?", message.ID).Scan(&wageTrxAmount); err != nil {
 		return richerror.New(op).WithKind(richerror.KindUnexpected).
 			WithErr(err).WithMessage(errmsg.ErrorMsgSomethingWentWrong)
 	}
@@ -86,7 +88,7 @@ func (m MysqlSMSRepository) UpdateStateToFailed(ctx context.Context, message ent
 			WithErr(err).WithMessage(err.Error())
 	}
 
-	if _, err := m.adapter.Client().ExecContext(ctx, `
+	if _, err := tx.ExecContext(ctx, `
 		UPDATE messages
 		SET status = ?, failed_reason = ?, updated_at = ?
 		WHERE id = ?

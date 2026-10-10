@@ -1,10 +1,12 @@
 package userparam
 
+import "github.com/shopspring/decimal"
+
 type IncreaseBalanceRequest struct {
-	UserID uint    `json:"user_id"`
-	Amount float64 `json:"amount"`
+	UserID uint            `json:"user_id"`
+	Amount decimal.Decimal `json:"amount"`
 }
 
 type IncreaseBalanceResponse struct {
-	NewBalance float64 `json:"new_balance"`
+	NewBalance decimal.Decimal `json:"new_balance"`
 }

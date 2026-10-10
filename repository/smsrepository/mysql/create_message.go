@@ -8,6 +8,9 @@ import (
 	"smsgateway/entity"
 	"smsgateway/pkg/errmsg"
 	"smsgateway/pkg/richerror"
+	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 // CreateMessage charges the user's balance and persists the message in one
@@ -33,8 +36,8 @@ func (m MysqlSMSRepository) CreateMessage(ctx context.Context, message *entity.M
 		}
 	}()
 
-	var smsWageAmount float64
-	if err := tx.QueryRow("SELECT amount FROM wages WHERE (user_id = ? AND type = ?) OR (type = ?)", message.UserID, message.Type, message.Type).Scan(&smsWageAmount); err != nil {
+	var smsWageAmount decimal.Decimal
+	if err := tx.QueryRowContext(ctx, "SELECT amount FROM wages WHERE (user_id = ? AND type = ?) OR (type = ?)", message.UserID, message.Type, message.Type).Scan(&smsWageAmount); err != nil {
 		return richerror.New(op).WithKind(richerror.KindUnexpected).
 			WithErr(err).WithMessage(errmsg.ErrorMsgSomethingWentWrong)
 	}
@@ -56,10 +59,12 @@ func (m MysqlSMSRepository) CreateMessage(ctx context.Context, message *entity.M
 			WithErr(err).WithMessage(err.Error())
 	}
 
+	now := time.Now().Unix()
+
 	result, err := tx.ExecContext(ctx, `
-		INSERT INTO messages (user_id, idempotency_key, source_number, receptor_number, content, type, status)
-		VALUES (?,?,?,?,?,?,?)
-	`, message.UserID, message.IdempotencyKey, message.SourceNumber, message.ReceptorNumber, message.Content, message.Type, message.Status)
+		INSERT INTO messages (user_id, idempotency_key, source_number, receptor_number, content, type, status, created_at, updated_at)
+		VALUES (?,?,?,?,?,?,?,?,?)
+	`, message.UserID, message.IdempotencyKey, message.SourceNumber, message.ReceptorNumber, message.Content, message.Type, message.Status, now, now)
 	if err != nil {
 		err = errmsg.WrapMySQLError(fmt.Sprintf("insert message for user %d", message.UserID), err)
 		return richerror.New(op).WithKind(richerror.KindUnexpected).

@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"smsgateway/param/userparam"
+
+	"github.com/shopspring/decimal"
 )
 
 type UserService struct {
@@ -16,7 +18,7 @@ func NewUserService(userRepo UserRepository) UserService {
 }
 
 type UserRepository interface {
-	IncreaseBalance(ctx context.Context, userID uint, amount float64) (float64, error)
+	IncreaseBalance(ctx context.Context, userID uint, amount decimal.Decimal) (decimal.Decimal, error)
 }
 
 func (s UserService) IncreaseBalance(ctx context.Context, req userparam.IncreaseBalanceRequest) (userparam.IncreaseBalanceResponse, error) {
