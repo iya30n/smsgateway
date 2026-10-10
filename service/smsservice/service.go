@@ -32,11 +32,3 @@ type MessageBroker interface {
 	SendToNormalQueue(ctx context.Context, body []byte) error
 	SendToExpressQueue(ctx context.Context, body []byte) error
 }
-
-func (s SMSService) UpdateState(ctx context.Context, message entity.Message) error {
-	if message.Status == entity.MessageStatusFailed {
-		return s.smsRepo.UpdateStateToFailed(ctx, message)
-	}
-
-	return s.smsRepo.UpdateState(ctx, message)
-}
