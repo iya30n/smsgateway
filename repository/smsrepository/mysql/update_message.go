@@ -17,27 +17,17 @@ import (
 func (m MysqlSMSRepository) UpdateState(ctx context.Context, message entity.Message) error {
 	const op = "mysqlsmsrepo.UpdateState"
 
-	result, err := m.adapter.Client().ExecContext(ctx, `
+	_, err := m.adapter.Client().ExecContext(ctx, `
 		UPDATE messages
 		SET status = ?, failed_reason = ?, updated_at = ?
-		WHERE id = ?
-	`, message.Status, message.FailedReason, time.Now().Unix(), message.ID)
+		WHERE id = ? AND status NOT IN (?, ?)
+	`, message.Status, message.FailedReason, time.Now().Unix(), message.ID,
+		entity.MessageStatusSent, entity.MessageStatusFailed)
+
 	if err != nil {
 		err = errmsg.WrapMySQLError(fmt.Sprintf("update message %d state", message.ID), err)
 		return richerror.New(op).WithErr(err).WithKind(richerror.KindUnexpected).
 			WithMessage(errmsg.ErrorMsgSomethingWentWrong)
-	}
-
-	affected, err := result.RowsAffected()
-	if err != nil {
-		err = errmsg.WrapMySQLError(fmt.Sprintf("get affected rows for message %d", message.ID), err)
-		return richerror.New(op).WithErr(err).WithKind(richerror.KindUnexpected).
-			WithMessage(errmsg.ErrorMsgSomethingWentWrong)
-	}
-
-	if affected == 0 {
-		return richerror.New(op).WithKind(richerror.KindNotFound).
-			WithMessage(errmsg.ErrorMsgNotFound)
 	}
 
 	return nil
@@ -64,6 +54,28 @@ func (m MysqlSMSRepository) UpdateStateToFailed(ctx context.Context, message ent
 			// TODO: put the error into logger service
 		}
 	}()
+
+	var currentStatus entity.MessageStatus
+	if err := tx.QueryRowContext(ctx, "SELECT status FROM messages WHERE id = ? FOR UPDATE", message.ID).Scan(&currentStatus); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return richerror.New(op).WithKind(richerror.KindNotFound).
+				WithMessage(errmsg.ErrorMsgNotFound)
+		}
+
+		err = errmsg.WrapMySQLError(fmt.Sprintf("get message %d status for update", message.ID), err)
+		return richerror.New(op).WithErr(err).WithKind(richerror.KindUnexpected).
+			WithMessage(errmsg.ErrorMsgSomethingWentWrong)
+	}
+
+	if currentStatus.IsTerminal() {
+		// Already finalized: do not move the status and do not refund again.
+		if err := tx.Commit(); err != nil {
+			return errmsg.WrapMySQLError("commit already-finalized message transaction", err)
+		}
+		committed = true
+
+		return nil
+	}
 
 	var wageTrxAmount decimal.Decimal
 	if err := tx.QueryRowContext(ctx, "SELECT amount FROM transactions WHERE message_id = ?", message.ID).Scan(&wageTrxAmount); err != nil {

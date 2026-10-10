@@ -40,6 +40,8 @@ func (s OperatorService) GetStableTargets(ctx context.Context) ([]OperatorTarget
 		return nil, err
 	}
 
+	// TODO: use circuit breaker pattern
+	// TODO: return sorted list of operators (by stability score), from a cache storage
 	targets := make([]OperatorTarget, 0, len(operators))
 	for _, operator := range operators {
 		number, ok, err := s.smsNumberRepo.GetActiveNumberByOperator(operator.ID)
