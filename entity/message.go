@@ -14,6 +14,20 @@ type Message struct {
 	UpdatedAt int64
 }
 
+// MessageFilter narrows a message listing query. Zero values mean the filter is
+// not applied; CreatedFrom is inclusive and CreatedTo is exclusive, both as unix
+// timestamps.
+type MessageFilter struct {
+	UserID         uint
+	ReceptorNumber string
+	Status         MessageStatus
+	Type           SmsType
+	CreatedFrom    int64
+	CreatedTo      int64
+	Limit          int
+	Offset         int
+}
+
 type SmsType string
 
 const (

@@ -28,4 +28,6 @@ func (h Handler) SetupRoutes() {
 	// for now we will use a static rate limit.
 	userGroup.POST("/send", h.SendNormalSMS, middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(50.0)))
 	userGroup.POST("/send/express", h.SendExpressSMS, middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(5.0)))
+
+	userGroup.GET("/report", h.ReportSMS)
 }

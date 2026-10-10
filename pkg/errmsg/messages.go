@@ -12,4 +12,5 @@ const (
 	ErrorMsgUserIDIsNotValid = "user ID is not valid"
 	ErrorMsgUserHasNotEnoughBalance = "user has not enough balance"
 	ErrorMsgSourceNumberIsNotValid = "source number is not valid"
+	ErrorMsgInvalidDateRange        = "invalid date range"
 )
