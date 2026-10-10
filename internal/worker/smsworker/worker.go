@@ -2,7 +2,9 @@ package smsworker
 
 import (
 	"context"
+	"fmt"
 	"smsgateway/contract/sms"
+	"smsgateway/entity"
 	"smsgateway/service/smsservice"
 	"time"
 
@@ -52,6 +54,11 @@ func (w *Worker) handle(ctx context.Context, d amqp.Delivery) error {
 	for attempt := 1; attempt <= MaxAttempts; attempt++ {
 		smsStatusCode = w.smsOp.SendSMS(ctx, req.SourceNumber, req.ReceptorNumber, req.Content)
 		if smsStatusCode == 200 {
+			if err := w.markSent(ctx, req.MessageId); err != nil {
+				_ = d.Nack(false, true)
+				return nil
+			}
+
 			_ = d.Ack(false)
 			return nil
 		}
@@ -69,9 +76,29 @@ func (w *Worker) handle(ctx context.Context, d amqp.Delivery) error {
 		}
 	}
 
-	// TODO: w.logger.Warn("sms failed", "id", req.Id, "attempt", MaxAttempts, "err", lastErr)
+	if err := w.markFailed(ctx, req.MessageId, req.UserId, smsStatusCode); err != nil {
+		// TODO: w.logger.Error("failed to persist failed state", "id", req.MessageId, "err", err)
+	}
+
+	// TODO: w.logger.Warn("sms failed", "id", req.MessageId, "attempt", MaxAttempts)
 	_ = d.Nack(false, false) // → DLQ
 	return nil
+}
+
+func (w *Worker) markSent(ctx context.Context, messageID int64) error {
+	return w.smsSvc.UpdateState(ctx, entity.Message{
+		ID:     uint(messageID),
+		Status: entity.MessageStatusSent,
+	})
+}
+
+func (w *Worker) markFailed(ctx context.Context, messageID int64, userID uint64, statusCode uint) error {
+	return w.smsSvc.UpdateState(ctx, entity.Message{
+		ID:           uint(messageID),
+		UserID:       uint(userID),
+		Status:       entity.MessageStatusFailed,
+		FailedReason: fmt.Sprintf("operator returned status %d after %d attempts", statusCode, MaxAttempts),
+	})
 }
 
 func backoff(attempt int) time.Duration {

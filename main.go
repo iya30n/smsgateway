@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	mysqlAdapter "smsgateway/adapter/mysql"
+	"smsgateway/adapter/rabbitmq"
 	"smsgateway/config"
 	"smsgateway/delivery/httpserver/smshandler"
 	"smsgateway/delivery/httpserver/userhandler"
@@ -29,6 +30,11 @@ func main() {
 
 	// adapters
 	mysqlAdapter := mysqlAdapter.New(cnf.Mysql)
+	rabbitmqAdapter, err := rabbitmq.New(cnf.RabbitMQ)
+	if err != nil {
+		panic(err)
+	}
+	defer rabbitmqAdapter.Close()
 
 	// migrate db tables
 	migrator := migrator.NewMigrator(mysqlAdapter, "mysql", "repository/mysql/migrations")
@@ -46,7 +52,7 @@ func main() {
 	// services
 	userSvc := service.NewUserService(userRepo)
 	operatorSvc := service.NewOperatorService(operatorRepo, smsNumberRepo)
-	smsSvc := smsservice.NewSMSService(smsRepo, operatorSvc)
+	smsSvc := smsservice.NewSMSService(smsRepo, rabbitmqAdapter, operatorSvc)
 
 	e := echo.New()
 

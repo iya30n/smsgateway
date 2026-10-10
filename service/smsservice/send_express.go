@@ -24,6 +24,7 @@ func (s SMSService) SendExpressSMS(ctx context.Context, req smsparam.SendExpress
 
 	message := entity.Message{
 		UserID:         req.UserID,
+		IdempotencyKey: req.IdempotencyKey,
 		ReceptorNumber: req.ReceptorNumber,
 		Content:        req.Content,
 		Type:           req.SmsType,
@@ -39,6 +40,7 @@ func (s SMSService) SendExpressSMS(ctx context.Context, req smsparam.SendExpress
 		MessageId:      int64(message.ID),
 		ReceptorNumber: message.ReceptorNumber,
 		Content:        message.Content,
+		UserId:         uint64(message.UserID),
 	})
 	if err != nil {
 		// TODO: do something, think about it.

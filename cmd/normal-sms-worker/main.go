@@ -40,7 +40,7 @@ func main() {
 
 	// services
 	operatorService := service.NewOperatorService(operatorRepo, smsNumberRepo)
-	smsService := smsservice.NewSMSService(smsRepo, operatorService)
+	smsService := smsservice.NewSMSService(smsRepo, rabbitmqAdapter, operatorService)
 
 	// operators
 	operator := smsoperator.NewFirstOperatorOperator(cnf.FirstOperator)

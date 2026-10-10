@@ -24,6 +24,7 @@ func (s SMSService) SendNormalSMS(ctx context.Context, req smsparam.SendSMSReque
 
 	message := entity.Message{
 		UserID:         req.UserID,
+		IdempotencyKey: req.IdempotencyKey,
 		SourceNumber:   req.SourceNumber,
 		ReceptorNumber: req.ReceptorNumber,
 		Content:        req.Content,
@@ -41,6 +42,7 @@ func (s SMSService) SendNormalSMS(ctx context.Context, req smsparam.SendSMSReque
 		SourceNumber:   message.SourceNumber,
 		ReceptorNumber: message.ReceptorNumber,
 		Content:        message.Content,
+		UserId:         uint64(message.UserID),
 	})
 	if err != nil {
 		// TODO: do something, think about it.

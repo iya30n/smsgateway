@@ -13,7 +13,9 @@ import (
 	"smsgateway/internal/worker/smsworker"
 	operatorRepository "smsgateway/repository/operatorrepository/mysql"
 	smsNumberRepository "smsgateway/repository/smsnumberrepository/mysql"
+	smsRepository "smsgateway/repository/smsrepository/mysql"
 	"smsgateway/service"
+	"smsgateway/service/smsservice"
 )
 
 // Express SMS worker: consumes the sms.express queue.
@@ -32,16 +34,18 @@ func main() {
 	}
 
 	// repositories
+	smsRepo := smsRepository.NewMysql(mysqlAdapter)
 	operatorRepo := operatorRepository.NewMysql(mysqlAdapter)
 	smsNumberRepo := smsNumberRepository.NewMysql(mysqlAdapter)
 
 	// services
 	operatorService := service.NewOperatorService(operatorRepo, smsNumberRepo)
+	smsService := smsservice.NewSMSService(smsRepo, rabbitmqAdapter, operatorService)
 
 	// operators
 	operator := smsoperator.NewFirstOperatorOperator(cnf.FirstOperator)
 
-	worker := smsworker.NewExpressWorker(rabbitmqAdapter, operator, operatorService, rabbitmq.QueueExpress)
+	worker := smsworker.NewExpressWorker(rabbitmqAdapter, operator, operatorService, smsService, rabbitmq.QueueExpress)
 	if err := worker.Run(ctx); err != nil {
 		// TODO: handle the error
 	}

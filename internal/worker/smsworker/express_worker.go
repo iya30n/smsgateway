@@ -2,8 +2,11 @@ package smsworker
 
 import (
 	"context"
+	"fmt"
 	"smsgateway/contract/sms"
+	"smsgateway/entity"
 	"smsgateway/service"
+	"smsgateway/service/smsservice"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -14,6 +17,7 @@ type ExpressWorker struct {
 	msgBroker       MessageBrokerAdapter
 	smsOp           SmsOperator
 	operatorService service.OperatorService
+	smsSvc          smsservice.SMSService
 	queueName       string
 }
 
@@ -21,12 +25,14 @@ func NewExpressWorker(
 	msgBroker MessageBrokerAdapter,
 	smsOp SmsOperator,
 	operatorService service.OperatorService,
+	smsSvc smsservice.SMSService,
 	queueName string,
 ) *ExpressWorker {
 	return &ExpressWorker{
 		msgBroker:       msgBroker,
 		smsOp:           smsOp,
 		operatorService: operatorService,
+		smsSvc:          smsSvc,
 		queueName:       queueName,
 	}
 }
@@ -58,6 +64,14 @@ func (w *ExpressWorker) handle(ctx context.Context, d amqp.Delivery) error {
 
 	for _, target := range targets {
 		if w.sendWithRetries(ctx, target.Number, &req) {
+			if err := w.smsSvc.UpdateState(ctx, entity.Message{
+				ID:     uint(req.MessageId),
+				Status: entity.MessageStatusSent,
+			}); err != nil {
+				_ = d.Nack(false, true)
+				return nil
+			}
+
 			_ = d.Ack(false)
 			return nil
 		}
@@ -66,6 +80,15 @@ func (w *ExpressWorker) handle(ctx context.Context, d amqp.Delivery) error {
 			_ = d.Nack(false, true)
 			return nil
 		}
+	}
+
+	if err := w.smsSvc.UpdateState(ctx, entity.Message{
+		ID:           uint(req.MessageId),
+		UserID:       uint(req.UserId),
+		Status:       entity.MessageStatusFailed,
+		FailedReason: fmt.Sprintf("no operator target accepted the message after %d attempts each", MaxAttempts),
+	}); err != nil {
+		// TODO: add logger
 	}
 
 	_ = d.Nack(false, false) // → DLQ
