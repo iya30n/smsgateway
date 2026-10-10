@@ -3,9 +3,11 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
+	"smsgateway/pkg/logger"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+	"go.uber.org/zap"
 )
 
 func (a *Adapter) SendToNormalQueue(ctx context.Context, body []byte) error {
@@ -54,10 +56,22 @@ func (a *Adapter) send(ctx context.Context, queueName string, body []byte) error
 			return fmt.Errorf("confirm channel closed")
 		}
 		if !c.Ack {
+			logger.Logger.Error("broker did not confirm publish",
+				zap.String("queue", queueName),
+			)
+
 			return fmt.Errorf("publish not confirmed by broker")
 		}
+
+		logger.Logger.Debug("message published", zap.String("queue", queueName))
+
 		return nil
 	case <-ctx.Done():
+		logger.Logger.Warn("publish cancelled by context",
+			zap.String("queue", queueName),
+			zap.Error(ctx.Err()),
+		)
+
 		return ctx.Err()
 	}
 }

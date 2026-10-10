@@ -23,6 +23,12 @@ x-sms-env: &sms-env
   FIRST_OPERATOR_API_KEY: ${FIRST_OPERATOR_API_KEY:-}
   FIRST_OPERATOR_TIMEOUT: ${FIRST_OPERATOR_TIMEOUT:-10s}
 
+  # The app user cannot write into /app, so the rotating file sink goes to /tmp.
+  # stdout is the sink that matters in a container; see the Loki note in
+  # docs/architecture.md.
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  LOG_DIR: ${LOG_DIR:-/tmp/logs}
+
 services:
   mysql:
     image: hub.hamdocker.ir/mysql:8.0

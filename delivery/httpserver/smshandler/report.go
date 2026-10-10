@@ -4,13 +4,17 @@ import (
 	"net/http"
 	"smsgateway/param/smsparam"
 	"smsgateway/pkg/httpmsg"
+	"smsgateway/pkg/logger"
 
 	"github.com/labstack/echo/v5"
+	"go.uber.org/zap"
 )
 
 func (h Handler) ReportSMS(c *echo.Context) error {
 	var req smsparam.ReportSMSRequest
 	if err := c.Bind(&req); err != nil {
+		logger.Logger.Warn("failed to bind report sms request", zap.Error(err))
+
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 

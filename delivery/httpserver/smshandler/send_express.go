@@ -6,14 +6,18 @@ import (
 	"smsgateway/param/smsparam"
 	"smsgateway/pkg/errmsg"
 	"smsgateway/pkg/httpmsg"
+	"smsgateway/pkg/logger"
 
 	"github.com/labstack/echo/v5"
+	"go.uber.org/zap"
 )
 
 // i have defined send express as a separate function because it may have different logic in the real-world scenario.
 func (h Handler) SendExpressSMS(c *echo.Context) error {
 	var req smsparam.SendExpressSMSRequest
 	if err := c.Bind(&req); err != nil {
+		logger.Logger.Warn("failed to bind send express sms request", zap.Error(err))
+
 		return echo.NewHTTPError(http.StatusBadRequest, errmsg.ErrorMsgInvalidInput)
 	}
 

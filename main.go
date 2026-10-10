@@ -10,6 +10,7 @@ import (
 	"smsgateway/config"
 	"smsgateway/delivery/httpserver/smshandler"
 	"smsgateway/delivery/httpserver/userhandler"
+	"smsgateway/pkg/logger"
 	"smsgateway/repository/migrator"
 	operatormysqlrepository "smsgateway/repository/operatorrepository/mysql"
 	smsnumbermysqlrepository "smsgateway/repository/smsnumberrepository/mysql"
@@ -23,16 +24,22 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v5"
+	"go.uber.org/zap"
 )
 
 func main() {
 	cnf := config.Load()
 
+	logger.Logger.Info("starting sms gateway api",
+		zap.String("host", cnf.HttpServer.Host),
+		zap.String("port", cnf.HttpServer.Port),
+	)
+
 	// adapters
 	mysqlAdapter := mysqlAdapter.New(cnf.Mysql)
 	rabbitmqAdapter, err := rabbitmq.New(cnf.RabbitMQ)
 	if err != nil {
-		panic(err)
+		logger.Logger.Fatal("failed to connect to rabbitmq", zap.Error(err))
 	}
 	defer rabbitmqAdapter.Close()
 
@@ -70,6 +77,8 @@ func main() {
 	}
 
 	if err := sc.Start(ctx, e); err != nil {
-		panic(err)
+		logger.Logger.Fatal("http server stopped", zap.Error(err))
 	}
+
+	logger.Logger.Info("http server stopped")
 }

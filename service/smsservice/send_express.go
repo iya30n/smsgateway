@@ -5,7 +5,9 @@ import (
 	"smsgateway/contract/sms"
 	"smsgateway/entity"
 	"smsgateway/param/smsparam"
+	"smsgateway/pkg/logger"
 
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -43,20 +45,46 @@ func (s SMSService) SendExpressSMS(ctx context.Context, req smsparam.SendExpress
 		UserId:         uint64(message.UserID),
 	})
 	if err != nil {
-		// TODO: do something, think about it.
+		logger.Logger.Error("failed to marshal express sms payload",
+			zap.Uint("message_id", message.ID),
+			zap.Error(err),
+		)
+
+		if refundErr := s.smsRepo.UpdateStateToFailed(ctx, message); refundErr != nil {
+			logger.Logger.Error("failed to refund after marshal failure",
+				zap.Uint("message_id", message.ID),
+				zap.Error(refundErr),
+			)
+		}
+
+		return smsparam.SendExpressSMSResponse{}, err
 	}
 
 	if err := s.msgBroker.SendToExpressQueue(ctx, body); err != nil {
-		if err := s.smsRepo.UpdateStateToFailed(ctx, message); err != nil {
-			return smsparam.SendExpressSMSResponse{}, err
+		logger.Logger.Error("failed to publish to sms.express, refunding",
+			zap.Uint("message_id", message.ID),
+			zap.Error(err),
+		)
+
+		if refundErr := s.smsRepo.UpdateStateToFailed(ctx, message); refundErr != nil {
+			logger.Logger.Error("failed to refund after publish failure",
+				zap.Uint("message_id", message.ID),
+				zap.Error(refundErr),
+			)
+
+			return smsparam.SendExpressSMSResponse{}, refundErr
 		}
 
-		// TODO: return rich error from send method on msg broker, and log error(s) in it.
 		return smsparam.SendExpressSMSResponse{}, err
 	}
 
 	message.Status = entity.MessageStatusQueued
-	s.smsRepo.UpdateState(ctx, message)
+	if err := s.smsRepo.UpdateState(ctx, message); err != nil {
+		logger.Logger.Error("failed to persist queued state",
+			zap.Uint("message_id", message.ID),
+			zap.Error(err),
+		)
+	}
 
 	return smsparam.SendExpressSMSResponse{}, nil
 }

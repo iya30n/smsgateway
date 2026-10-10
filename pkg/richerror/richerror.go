@@ -1,5 +1,7 @@
 package richerror
 
+import "strconv"
+
 type Kind int
 
 const (
@@ -56,6 +58,31 @@ func (r RichError) Error() string {
 	}
 
 	return r.message
+}
+
+func (r RichError) Operation() Op {
+	return r.operation
+}
+
+func (r RichError) Unwrap() error {
+	return r.wrappedError
+}
+
+func (k Kind) String() string {
+	switch k {
+	case KindInvalidInput:
+		return "invalid_input"
+	case KindForbidden:
+		return "forbidden"
+	case KindUnauthenticated:
+		return "unauthenticated"
+	case KindNotFound:
+		return "not_found"
+	case KindUnexpected:
+		return "unexpected"
+	}
+
+	return "kind_" + strconv.Itoa(int(k))
 }
 
 func (r RichError) Kind() Kind {

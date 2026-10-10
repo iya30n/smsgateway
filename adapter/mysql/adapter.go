@@ -3,8 +3,11 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	"smsgateway/pkg/logger"
 	"time"
+
 	_ "github.com/go-sql-driver/mysql"
+	"go.uber.org/zap"
 )
 
 type Config struct {
@@ -22,7 +25,12 @@ type Adapter struct {
 func New(config Config) Adapter {
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@(%s:%s)/%s?parseTime=true", config.Username, config.Password, config.Host, config.Port, config.DBName))
 	if err != nil {
-		panic(err)
+		logger.Logger.Fatal("failed to open mysql connection",
+			zap.String("host", config.Host),
+			zap.String("port", config.Port),
+			zap.String("database", config.DBName),
+			zap.Error(err),
+		)
 	}
 
 	db.SetConnMaxLifetime(time.Minute * 3)

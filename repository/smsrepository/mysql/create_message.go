@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"smsgateway/entity"
 	"smsgateway/pkg/errmsg"
+	"smsgateway/pkg/logger"
 	"smsgateway/pkg/richerror"
 	"time"
 
 	"github.com/shopspring/decimal"
+	"go.uber.org/zap"
 )
 
 // CreateMessage charges the user's balance and persists the message in one
@@ -32,7 +34,10 @@ func (m MysqlSMSRepository) CreateMessage(ctx context.Context, message *entity.M
 			return
 		}
 		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
-			// TODO: put the error into logger service
+			logger.Logger.Error("failed to roll back create message transaction",
+				zap.String("op", op),
+				zap.Error(rollbackErr),
+			)
 		}
 	}()
 

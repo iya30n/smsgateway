@@ -59,7 +59,25 @@ Supporting packages:
 | `pkg/richerror/` | Error type carrying an operation, a kind and metadata. |
 | `pkg/httpmsg/` | Maps a `richerror.Kind` onto an HTTP status and message. |
 | `pkg/errmsg/` | Shared error strings. |
+| `pkg/logger/` | The process-wide zap logger (JSON to stdout plus a rotating file). |
 | `internal/worker/smsworker/` | The two worker implementations. |
+
+### Logging
+
+`pkg/logger` exposes a single package-level `logger.Logger` (`*zap.Logger`), configured in its
+`init()`. It is a global rather than an injected dependency: the alternative would be threading
+a logger through every constructor in the chain, which for a service of this size buys nothing.
+Callers use it as `logger.Logger.Error("...", zap.String("message_id", ...))`.
+
+| Sink | Destination | Purpose |
+| --- | --- | --- |
+| stdout | process stdout | The primary sink — what the container runtime collects. |
+| file | `$LOG_DIR/log.json` | Rotating (10 MB, 30 days) local copy for running outside a container. |
+
+`LOG_LEVEL` (debug/info/warn/error, default info) and `LOG_DIR` (default `./logs`) configure it.
+The file sink is best-effort: if the directory cannot be created the logger warns and keeps
+working through stdout, so a read-only container filesystem cannot take the process down at
+startup.
 
 ### Interfaces are declared by the consumer
 
@@ -168,6 +186,7 @@ re-sending. This is what makes a client retry after a timeout safe.
 | Publish to RabbitMQ fails | message marked failed; balance is refunded |
 | Status write fails after delivery | `Nack(requeue=true)` so the status is retried |
 | State update for an already-terminal message | ignored — no status change, no second refund |
+| Broker closes the consume channel | logged at error level, worker exits so it is restarted |
 
 `UpdateState` routes on the status: `failed` goes through `UpdateStateToFailed` (which refunds
 the charge and writes a `reversal` transaction), anything else through the plain
@@ -287,13 +306,24 @@ wrapped error and metadata. Kinds are `InvalidInput`, `Forbidden`, `Unauthentica
 Validation returns a `map[string]string` of field errors alongside the error, which handlers
 serialise as `{"message": …, "errors": {…}}`.
 
+`MapRichErrKindsToHttpResponse` is also where unexpected failures reach the log. The client
+only ever sees the rich error's message (often the generic "something went wrong"), so the
+operation name, the kind and the wrapped cause are logged at the point the status code is
+decided. A kind of `Unexpected` — or an unset kind, which is a programming error — is logged
+at error level; the expected kinds (`InvalidInput`, `NotFound`, …) are not, since they describe
+the caller's problem rather than the server's.
+
 ## Known gaps
 
 These are visible in the code and are called out so the document matches reality:
 
 - **No tests.** There are no `_test.go` files in the repository.
-- **No logging.** Errors are returned and mapped to HTTP responses, but there is no logger;
-  several `TODO` comments mark where structured logging belongs.
+- **No metrics or alerting.** Failures are logged, but nothing counts them. The
+  `logger.Logger.Fatal` calls on startup are the only "alert" path, and a worker that keeps
+  crash-looping is silent to anyone not reading the logs.
+- **Logs are not shipped anywhere.** Every service writes JSON to stdout and to a rotating
+  local file (`LOG_DIR`). Nothing collects, aggregates or searches them across replicas — see
+  the Loki item under Planned.
 - **`markSent` requeues on a failed status write.** When an SMS is delivered but the status
   update fails, the worker nacks with `requeue=true` so the status is not lost. The operator
   call is therefore repeated on redelivery. This is safe only while `SendSMS` is idempotent
@@ -303,6 +333,40 @@ These are visible in the code and are called out so the document matches reality
   after a requeue can exceed `MaxAttempts` in total.
 
 ## Planned but not implemented
+
+### Log aggregation with Loki
+
+Every service already logs structured JSON through `pkg/logger`, but each one only writes to
+its own stdout and to a rotating file on its own disk. With three binaries — and with workers
+meant to be scaled horizontally — that is a dead end: `docker compose logs` interleaves
+replicas with no way to filter by message id, a container's file sink dies with the container,
+and there is no way to answer "what happened to message 42" across the API and both workers.
+
+The intended fix is a **Loki** stack alongside the existing services:
+
+```
+app / normal-sms-worker / express-sms-worker
+        │ stdout (JSON, already the primary sink)
+        ▼
+   Promtail (or Grafana Alloy) ──push──▶ Loki ──▶ Grafana
+```
+
+What it buys, given the current code:
+
+- **One query across all three binaries.** The log fields are already structured, so
+  `{service="normal-sms-worker"} | json | message_id=42` returns the whole life of a message.
+  This is the reason the logger emits JSON with typed fields rather than formatted strings.
+- **Survives the container.** The file sink under `LOG_DIR` is only useful for a local run;
+  once logs are in Loki the container filesystem can stay read-only.
+- **Label by lane and operator.** The workers already log the queue name and operator id, which
+  map directly onto Loki labels — that is what makes "the express lane is failing for one
+  operator" a single query instead of a grep across replicas.
+- **Alerting on top of it.** Loki (or Grafana's alert rules) can trigger on patterns the code
+  already emits but nobody watches today: repeated `no operator target available`, a growing
+  rate of `sms failed, moving to DLQ`, or a worker that keeps restarting.
+
+Deliberately *not* part of this: metrics. Log-derived counters are a poor substitute for real
+metrics — a Prometheus endpoint per binary is the separate, larger piece of work (see below).
 
 - **Capacity enforcement from `express_reserved_tps`.** `Operator.NormalTPS()` computes the
   normal-lane share, and the `operators` table stores the reservation with a CHECK constraint,
@@ -316,3 +380,5 @@ These are visible in the code and are called out so the document matches reality
   reconciliation.
 - The `FirstOperatorOperator.SendSMS` adapter returns a hard-coded `200`; the real HTTP call
   to the operator API is not implemented.
+- Metrics and alerting: a `/metrics` endpoint per binary with counters for sends, failures,
+  retries and DLQ moves, plus alerts on the operator failure rate.

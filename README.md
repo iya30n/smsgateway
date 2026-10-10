@@ -33,6 +33,20 @@ injected by the runtime). See [.env.example](.env.example) for the full list.
 | `FIRST_OPERATOR_BASE_URL` | `https://api.first-operator.ir` | Operator API base URL. |
 | `FIRST_OPERATOR_API_KEY` | — | Operator API key. |
 | `FIRST_OPERATOR_TIMEOUT` | `10s` | Operator request timeout. |
+| `LOG_LEVEL` | `info` | `debug`, `info`, `warn` or `error`. |
+| `LOG_DIR` | `./logs` | Directory for the rotating JSON log file. Logs also always go to stdout. |
+
+## Logs
+
+Every service logs JSON to stdout, which is what `docker compose logs` and the container
+runtime collect:
+
+```bash
+docker compose logs -f normal_sms_worker
+```
+
+Outside a container the same lines are also written to `$LOG_DIR/log.json`, rotated at 10 MB
+and kept for 30 days. Set `LOG_LEVEL=debug` for more detail.
 
 ## Running with Docker Compose (recommended)
 

@@ -1,10 +1,11 @@
 package migrator
 
 import (
-	"fmt"
 	mysqlAdapter "smsgateway/adapter/mysql"
+	"smsgateway/pkg/logger"
 
 	migrate "github.com/rubenv/sql-migrate"
+	"go.uber.org/zap"
 )
 
 type Migrator struct {
@@ -26,17 +27,17 @@ func NewMigrator(adapter mysqlAdapter.Adapter, dialect string, migrationsPath st
 func (m Migrator) Up() {
 	n, err := migrate.Exec(m.adapter.Client(), m.dialect, m.migrations, migrate.Up)
 	if err != nil {
-		panic(err)
+		logger.Logger.Fatal("failed to apply migrations", zap.Error(err))
 	}
 
-	fmt.Printf("Applied %d migrations!\n", n)
+	logger.Logger.Info("migrations applied", zap.Int("count", n))
 }
 
 func (m Migrator) Down() {
 	n, err := migrate.Exec(m.adapter.Client(), m.dialect, m.migrations, migrate.Down)
 	if err != nil {
-		panic(err)
+		logger.Logger.Fatal("failed to roll back migrations", zap.Error(err))
 	}
 
-	fmt.Printf("Applied %d migrations!\n", n)
+	logger.Logger.Info("migrations rolled back", zap.Int("count", n))
 }

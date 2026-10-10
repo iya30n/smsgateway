@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"smsgateway/entity"
 	"smsgateway/pkg/errmsg"
+	"smsgateway/pkg/logger"
 	"smsgateway/pkg/richerror"
 
 	"github.com/shopspring/decimal"
+	"go.uber.org/zap"
 )
 
 func (m *MysqlUserRepository) IncreaseBalance(ctx context.Context, userID uint, amount decimal.Decimal) (decimal.Decimal, error) {
@@ -30,7 +32,10 @@ func (m *MysqlUserRepository) IncreaseBalance(ctx context.Context, userID uint, 
 			return
 		}
 		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
-			// TODO: put the error into logger service
+			logger.Logger.Error("failed to roll back increase balance transaction",
+				zap.String("op", op),
+				zap.Error(rollbackErr),
+			)
 		}
 	}()
 

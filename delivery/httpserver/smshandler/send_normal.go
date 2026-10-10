@@ -6,13 +6,17 @@ import (
 	"smsgateway/param/smsparam"
 	"smsgateway/pkg/errmsg"
 	"smsgateway/pkg/httpmsg"
+	"smsgateway/pkg/logger"
 
 	"github.com/labstack/echo/v5"
+	"go.uber.org/zap"
 )
 
 func (h Handler) SendNormalSMS(c *echo.Context) error {
 	var req smsparam.SendSMSRequest
 	if err := c.Bind(&req); err != nil {
+		logger.Logger.Warn("failed to bind send sms request", zap.Error(err))
+
 		return echo.NewHTTPError(http.StatusBadRequest, errmsg.ErrorMsgInvalidInput)
 	}
 

@@ -9,9 +9,11 @@ import (
 
 	"smsgateway/entity"
 	"smsgateway/pkg/errmsg"
+	"smsgateway/pkg/logger"
 	"smsgateway/pkg/richerror"
 
 	"github.com/shopspring/decimal"
+	"go.uber.org/zap"
 )
 
 func (m MysqlSMSRepository) UpdateState(ctx context.Context, message entity.Message) error {
@@ -51,7 +53,10 @@ func (m MysqlSMSRepository) UpdateStateToFailed(ctx context.Context, message ent
 			return
 		}
 		if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
-			// TODO: put the error into logger service
+			logger.Logger.Error("failed to roll back update message transaction",
+				zap.String("op", op),
+				zap.Error(rollbackErr),
+			)
 		}
 	}()
 

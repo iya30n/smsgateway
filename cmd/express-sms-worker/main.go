@@ -11,11 +11,14 @@ import (
 	smsoperator "smsgateway/adapter/sms_operator"
 	"smsgateway/config"
 	"smsgateway/internal/worker/smsworker"
+	"smsgateway/pkg/logger"
 	operatorRepository "smsgateway/repository/operatorrepository/mysql"
 	smsNumberRepository "smsgateway/repository/smsnumberrepository/mysql"
 	smsRepository "smsgateway/repository/smsrepository/mysql"
 	"smsgateway/service"
 	"smsgateway/service/smsservice"
+
+	"go.uber.org/zap"
 )
 
 // Express SMS worker: consumes the sms.express queue.
@@ -25,12 +28,13 @@ func main() {
 
 	cnf := config.Load()
 
+	logger.Logger.Info("starting express sms worker")
+
 	// adapters
 	mysqlAdapter := mysqlAdapter.New(cnf.Mysql)
 	rabbitmqAdapter, err := rabbitmq.New(cnf.RabbitMQ)
 	if err != nil {
-		// TODO: alert
-		panic(err)
+		logger.Logger.Fatal("failed to connect to rabbitmq", zap.Error(err))
 	}
 
 	// repositories
@@ -47,6 +51,9 @@ func main() {
 
 	worker := smsworker.NewExpressWorker(rabbitmqAdapter, operator, operatorService, smsService, rabbitmq.QueueExpress)
 	if err := worker.Run(ctx); err != nil {
-		// TODO: handle the error
+		logger.Logger.Error("worker stopped with an error", zap.Error(err))
+		os.Exit(1)
 	}
+
+	logger.Logger.Info("worker stopped")
 }

@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"smsgateway/contract/sms"
 	"smsgateway/entity"
+	"smsgateway/pkg/logger"
 	"smsgateway/service/smsservice"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -35,7 +37,10 @@ type SmsOperator interface {
 }
 
 func (w *Worker) Run(ctx context.Context) error {
-	// w.logger.Info("worker starting", "queue", w.queue, "provider", w.provider.Name())
+	logger.Logger.Info("worker starting",
+		zap.String("worker", "normal"),
+		zap.String("queue", w.queueName),
+	)
 
 	return w.msgBroker.Receive(ctx, w.queueName, func(ctx context.Context, d amqp.Delivery) error {
 		return w.handle(ctx, d)
@@ -45,7 +50,11 @@ func (w *Worker) Run(ctx context.Context) error {
 func (w *Worker) handle(ctx context.Context, d amqp.Delivery) error {
 	var req sms.SmsRequest
 	if err := proto.Unmarshal(d.Body, &req); err != nil {
-		// TODO: w.logger.Warn("bad message, moving to DLQ", "err", err)
+		logger.Logger.Warn("bad message, moving to DLQ",
+			zap.String("queue", w.queueName),
+			zap.Error(err),
+		)
+
 		_ = d.Nack(false, false)
 		return nil
 	}
@@ -55,9 +64,19 @@ func (w *Worker) handle(ctx context.Context, d amqp.Delivery) error {
 		smsStatusCode = w.smsOp.SendSMS(ctx, req.SourceNumber, req.ReceptorNumber, req.Content)
 		if smsStatusCode == 200 {
 			if err := w.markSent(ctx, req.MessageId); err != nil {
+				logger.Logger.Error("delivered but failed to persist sent state, requeueing",
+					zap.Int64("message_id", req.MessageId),
+					zap.Error(err),
+				)
+
 				_ = d.Nack(false, true)
 				return nil
 			}
+
+			logger.Logger.Info("sms sent",
+				zap.Int64("message_id", req.MessageId),
+				zap.Int("attempt", attempt),
+			)
 
 			_ = d.Ack(false)
 			return nil
@@ -68,6 +87,13 @@ func (w *Worker) handle(ctx context.Context, d amqp.Delivery) error {
 		}
 
 		delay := backoff(attempt)
+		logger.Logger.Warn("operator returned a retryable status, backing off",
+			zap.Int64("message_id", req.MessageId),
+			zap.Uint("status_code", smsStatusCode),
+			zap.Int("attempt", attempt),
+			zap.Duration("backoff", delay),
+		)
+
 		select {
 		case <-time.After(delay):
 		case <-ctx.Done():
@@ -77,10 +103,18 @@ func (w *Worker) handle(ctx context.Context, d amqp.Delivery) error {
 	}
 
 	if err := w.markFailed(ctx, req.MessageId, req.UserId, smsStatusCode); err != nil {
-		// TODO: w.logger.Error("failed to persist failed state", "id", req.MessageId, "err", err)
+		logger.Logger.Error("failed to persist failed state",
+			zap.Int64("message_id", req.MessageId),
+			zap.Error(err),
+		)
 	}
 
-	// TODO: w.logger.Warn("sms failed", "id", req.MessageId, "attempt", MaxAttempts)
+	logger.Logger.Warn("sms failed, moving to DLQ",
+		zap.Int64("message_id", req.MessageId),
+		zap.Uint("status_code", smsStatusCode),
+		zap.Int("attempt", MaxAttempts),
+	)
+
 	_ = d.Nack(false, false) // → DLQ
 	return nil
 }

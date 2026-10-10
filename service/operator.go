@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"smsgateway/entity"
+	"smsgateway/pkg/logger"
+
+	"go.uber.org/zap"
 )
 
 type OperatorService struct {
@@ -50,6 +53,10 @@ func (s OperatorService) GetStableTargets(ctx context.Context) ([]OperatorTarget
 		}
 
 		if !ok {
+			logger.Logger.Warn("operator has no active number, skipping",
+				zap.Uint("operator_id", operator.ID),
+			)
+
 			continue
 		}
 
