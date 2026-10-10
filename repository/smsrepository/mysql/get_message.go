@@ -18,13 +18,11 @@ func (m MysqlSMSRepository) GetByIdempotencyKey(ctx context.Context, idempotency
 
 	if err := row.Scan(&message.UserID, &message.SourceNumber, &message.ReceptorNumber, &message.Content, &message.Type, &message.Status); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			err = errmsg.WrapMySQLError(fmt.Sprintf("get message by idempotency key %s", idempotencyKey), err)
-			return &message, richerror.New(op).WithKind(richerror.KindNotFound).
-				WithMessage(errmsg.ErrorMsgNotFound)
+			return nil, nil
 		}
 
 		err = errmsg.WrapMySQLError(fmt.Sprintf("get message by idempotency key %s", idempotencyKey), err)
-		return &message, richerror.New(op).WithKind(richerror.KindUnexpected).
+		return nil, richerror.New(op).WithKind(richerror.KindUnexpected).
 			WithErr(err).WithMessage(errmsg.ErrorMsgSomethingWentWrong)
 	}
 
